@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHB — Quản lý Thay đổi</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --or:#F47920;--or2:#FF9A4D;--or3:#CC6210;--or-glow:rgba(244,121,32,.25);
+  --nv:#1B2F6E;--nv2:#2D4A9E;--nv3:#0F1C45;
+  --bg:#0D1117;--bg2:#161B22;--bg3:#1C2333;--bg4:#21283A;
+  --bdr:#2D3748;--bdr2:#3D4F6B;
+  --txt:#E8EDF5;--txt2:#9BA8BF;--txt3:#5F6E8A;
+  --teal:#00BFA5;--purple:#9F7AEA;--green:#48BB78;--red:#FC8181;
+  --shadow:0 4px 20px rgba(0,0,0,.4);
+  --r:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--txt);font-size:13px;min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:3px}
+
+/* ── TOPBAR ── */
+.topbar{background:linear-gradient(135deg,var(--nv3) 0%,var(--nv) 50%,var(--nv2) 100%);height:64px;padding:0 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;border-bottom:1px solid rgba(244,121,32,.3);box-shadow:0 2px 20px rgba(0,0,0,.5)}
+.topbar-left{display:flex;align-items:center;gap:16px}
+
+/* SHB LOGO */
+.shb-logo{display:flex;align-items:center;gap:8px;background:white;border-radius:8px;padding:6px 12px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.shb-icon{display:flex;align-items:center;justify-content:center}
+.shb-icon svg{width:28px;height:28px}
+.shb-text{font-size:20px;font-weight:800;color:var(--nv);letter-spacing:1px}
+
+.topbar-divider{width:1px;height:36px;background:rgba(255,255,255,.15)}
+.topbar-info{display:flex;flex-direction:column}
+.topbar-title{font-size:15px;font-weight:700;color:white;letter-spacing:.2px}
+.topbar-sub{font-size:11px;color:rgba(255,255,255,.55);margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.t-badge{background:rgba(244,121,32,.15);border:1px solid rgba(244,121,32,.3);color:var(--or2);font-size:11px;padding:4px 10px;border-radius:20px;font-weight:500}
+.t-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.8);padding:7px 14px;border-radius:7px;font-size:12px;cursor:pointer;font-family:inherit;transition:all .2s;display:flex;align-items:center;gap:5px}
+.t-btn:hover{background:rgba(255,255,255,.15);color:white}
+.t-btn.primary{background:var(--or);border-color:var(--or3);color:white}
+.t-btn.primary:hover{background:var(--or3)}
+
+/* ── ACTIVE FILTERS ── */
+.active-filters{background:var(--bg2);border-bottom:1px solid var(--bdr);padding:8px 28px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-height:40px}
+.af-label{font-size:11px;color:var(--txt3);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.af-chip{display:inline-flex;align-items:center;gap:5px;background:rgba(244,121,32,.15);border:1px solid rgba(244,121,32,.3);color:var(--or2);font-size:11px;padding:3px 10px;border-radius:20px;cursor:pointer;transition:all .15s}
+.af-chip:hover{background:rgba(244,121,32,.25)}
+.af-chip .x{opacity:.6;font-size:12px}
+.af-chip .x:hover{opacity:1}
+.af-empty{font-size:11px;color:var(--txt3);font-style:italic}
+
+/* ── FILTER BAR ── */
+.filter-bar{background:var(--bg2);border-bottom:1px solid var(--bdr);padding:10px 28px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:64px;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.fl{font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
+.fs{background:var(--bg3);border:1px solid var(--bdr);color:var(--txt);padding:6px 26px 6px 10px;border-radius:7px;font-size:12px;font-family:inherit;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%239BA8BF' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;transition:border-color .2s;min-width:130px}
+.fs:focus{outline:none;border-color:var(--or)}
+.fs option{background:var(--bg3)}
+.fdiv{width:1px;height:20px;background:var(--bdr)}
+.f-reset{font-size:12px;padding:6px 12px;border-radius:7px;border:1px solid var(--bdr);background:transparent;color:var(--txt2);cursor:pointer;font-family:inherit;margin-left:auto;transition:all .2s}
+.f-reset:hover{border-color:var(--or);color:var(--or)}
+
+/* ── MAIN ── */
+.main{padding:22px 28px;max-width:1600px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+
+/* ── SECTION ── */
+.sh{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.sh-dot{width:3px;height:20px;border-radius:2px;flex-shrink:0}
+.sh-title{font-size:12px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.08em}
+.sh-line{flex:1;height:1px;background:var(--bdr)}
+.sh-hint{font-size:11px;color:var(--txt3);font-style:italic}
+
+/* ── SCORECARDS ── */
+.sg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.sc{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r);padding:20px;position:relative;overflow:hidden;transition:all .25s;cursor:default}
+.sc:hover{border-color:var(--bdr2);transform:translateY(-2px);box-shadow:var(--shadow)}
+.sc::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;opacity:.8}
+.sc.or::after{background:linear-gradient(90deg,var(--or),var(--or2))}
+.sc.nv::after{background:linear-gradient(90deg,var(--nv),var(--nv2))}
+.sc.tl::after{background:linear-gradient(90deg,var(--teal),#4DD0C4)}
+.sc.pu::after{background:linear-gradient(90deg,var(--purple),#B794F4)}
+.sc-icon{font-size:22px;margin-bottom:10px;display:block}
+.sc-label{font-size:10px;font-weight:600;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+.sc-val{font-size:34px;font-weight:800;line-height:1;margin-bottom:10px;background:linear-gradient(135deg,var(--txt),var(--txt2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sc.or .sc-val{background:linear-gradient(135deg,var(--or2),var(--or));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sc-badge{display:inline-flex;align-items:center;font-size:10px;padding:3px 8px;border-radius:10px;font-weight:600}
+.b-or{background:rgba(244,121,32,.12);color:var(--or2);border:1px solid rgba(244,121,32,.2)}
+.b-nv{background:rgba(27,47,110,.3);color:#7B9EFF;border:1px solid rgba(123,158,255,.2)}
+.b-tl{background:rgba(0,191,165,.12);color:var(--teal);border:1px solid rgba(0,191,165,.2)}
+.b-pu{background:rgba(159,122,234,.12);color:var(--purple);border:1px solid rgba(159,122,234,.2)}
+
+/* ── CHART CARDS ── */
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.g21{display:grid;grid-template-columns:2fr 1fr;gap:12px}
+.g12{display:grid;grid-template-columns:1fr 2fr;gap:12px}
+.g13{display:grid;grid-template-columns:1fr 3fr;gap:12px}
+.cc{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r);padding:20px;transition:border-color .2s}
+.cc:hover{border-color:var(--bdr2)}
+.cc-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:8px}
+.cc-title{font-size:13px;font-weight:600;color:var(--txt)}
+.cc-sub{font-size:11px;color:var(--txt3);margin-top:2px}
+.tag{font-size:10px;padding:3px 8px;border-radius:5px;font-weight:600;white-space:nowrap;flex-shrink:0}
+.t-or{background:rgba(244,121,32,.15);color:var(--or2)}
+.t-nv{background:rgba(27,47,110,.4);color:#7B9EFF}
+.t-tl{background:rgba(0,191,165,.12);color:var(--teal)}
+.t-pu{background:rgba(159,122,234,.12);color:var(--purple)}
+.t-gr{background:var(--bg3);color:var(--txt2);border:1px solid var(--bdr)}
+.cc-hint{font-size:10px;color:var(--txt3);margin-top:8px;display:flex;align-items:center;gap:4px}
+
+/* ── CLICK HINT ── */
+.click-hint{font-size:10px;color:var(--txt3);display:flex;align-items:center;gap:4px;margin-top:8px;padding:5px 10px;background:var(--bg3);border-radius:6px;width:fit-content}
+
+/* ── LEGEND ── */
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px}
+.li{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--txt2);cursor:pointer;padding:2px 6px;border-radius:4px;transition:background .15s}
+.li:hover{background:var(--bg3)}
+.ld{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ll{width:18px;height:3px;border-radius:2px;flex-shrink:0}
+
+/* ── PROGRESS BARS ── */
+.prog-wrap{display:flex;flex-direction:column;gap:10px}
+.prog-row{display:flex;align-items:center;gap:10px;cursor:pointer;padding:4px 6px;border-radius:6px;transition:background .15s}
+.prog-row:hover{background:var(--bg3)}
+.prog-row.active-filter{background:rgba(244,121,32,.1);border:1px solid rgba(244,121,32,.2)}
+.prog-name{font-size:11px;color:var(--txt2);width:110px;flex-shrink:0;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prog-track{flex:1;height:6px;background:var(--bdr);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.prog-val{font-size:11px;font-weight:600;color:var(--txt);width:30px;text-align:right;flex-shrink:0}
+
+/* ── TABLE ── */
+.tscroll{overflow-x:auto;border-radius:8px;border:1px solid var(--bdr)}
+.dt{width:100%;border-collapse:collapse;font-size:12px}
+.dt th{background:var(--bg3);padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--bdr);white-space:nowrap;position:sticky;top:0}
+.dt th.sort{cursor:pointer;user-select:none}
+.dt th.sort:hover{color:var(--txt)}
+.dt td{padding:9px 12px;border-bottom:1px solid var(--bdr);color:var(--txt2);transition:background .1s}
+.dt tr:last-child td{border-bottom:none}
+.dt tr:hover td{background:var(--bg3);cursor:pointer}
+.dt tr.row-selected td{background:rgba(244,121,32,.08)!important;color:var(--txt)}
+.dt .num{text-align:right;font-weight:600;font-variant-numeric:tabular-nums;color:var(--txt)}
+.rank{width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700}
+.r1{background:var(--or);color:white}
+.r2{background:rgba(244,121,32,.2);color:var(--or2)}
+.r3{background:var(--bg3);color:var(--txt3);border:1px solid var(--bdr)}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:3px;border-bottom:1px solid var(--bdr);margin-bottom:16px}
+.tb{padding:8px 16px;font-size:12px;font-weight:600;color:var(--txt3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;border-radius:6px 6px 0 0}
+.tb.act{color:var(--or);border-bottom-color:var(--or);background:rgba(244,121,32,.06)}
+.tb:hover:not(.act){color:var(--txt);background:var(--bg3)}
+.tbc{display:none}
+.tbc.act{display:block}
+
+/* ── SELECTED FILTER INDICATOR ── */
+.chart-selected{border-color:var(--or)!important;box-shadow:0 0 0 1px rgba(244,121,32,.3)!important}
+
+/* ── NO DATA ── */
+.nodata{display:flex;flex-direction:column;align-items:center;justify-content:center;height:140px;color:var(--txt3);gap:8px;font-size:13px}
+.spinner{width:28px;height:28px;border:3px solid var(--bdr);border-top-color:var(--or);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── ALERT ── */
+.alert{background:rgba(252,129,74,.08);border:1px solid rgba(244,121,32,.3);border-radius:8px;padding:14px 18px;font-size:13px;color:var(--or2);display:flex;gap:10px;line-height:1.7}
+
+/* ── TOOLTIP CUSTOM ── */
+.custom-tooltip{background:var(--bg3)!important;border:1px solid var(--bdr2)!important;border-radius:8px!important;color:var(--txt)!important;font-family:'Be Vietnam Pro',sans-serif!important;box-shadow:var(--shadow)!important}
+
+/* ── MINI STAT ── */
+.mini-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.mini-stat{background:var(--bg3);border-radius:7px;padding:10px;text-align:center}
+.ms-val{font-size:18px;font-weight:700;color:var(--or)}
+.ms-label{font-size:10px;color:var(--txt3);margin-top:2px}
+
+/* ── FOOTER ── */
+.footer{text-align:center;padding:16px;color:var(--txt3);font-size:11px;border-top:1px solid var(--bdr);margin-top:4px;line-height:1.8}
+
+@media(max-width:900px){
+  .sg{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .g2,.g3,.g21,.g12,.g13{grid-template-columns:1fr}
+  .main,.filter-bar,.topbar,.active-filters{padding-left:14px;padding-right:14px}
+  .topbar{height:auto;padding-top:10px;padding-bottom:10px;flex-wrap:wrap;gap:8px}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <!-- SHB Logo -->
+    <div class="shb-logo">
+      <div class="shb-icon">
+        <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 2C7.373 2 2 7.373 2 14s5.373 12 12 12 12-5.373 12-12S20.627 2 14 2z" fill="#F47920" opacity=".12"/>
+          <path d="M8 18.5c0 0 2.5 1.5 5 1.5s5-1.5 5-1.5" stroke="#F47920" stroke-width="2" stroke-linecap="round"/>
+          <path d="M8 14c0 0 2-2 6-2s6 2 6 2" stroke="#F47920" stroke-width="2" stroke-linecap="round"/>
+          <path d="M10 9.5c0 0 1.5-1.5 4-1.5s4 1.5 4 1.5" stroke="#F47920" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="shb-text">SHB</span>
+    </div>
+    <div class="topbar-divider"></div>
+    <div class="topbar-info">
+      <div class="topbar-title">Báo cáo Quản lý Thay đổi</div>
+      <div class="topbar-sub">SAHA Digital Transformation · Change Management Dashboard</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="t-badge" id="last-update">Đang tải...</span>
+    <button class="t-btn" onclick="fetchAllData()">↻ Làm mới</button>
+    <button class="t-btn primary" onclick="window.print()">⬇ Xuất PDF</button>
+  </div>
+</div>
+
+<!-- ACTIVE FILTERS -->
+<div class="active-filters" id="active-filters-bar">
+  <span class="fl">Đang lọc:</span>
+  <span class="af-empty" id="af-empty">Không có bộ lọc — đang hiển thị tất cả dữ liệu</span>
+</div>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <span class="fl">Bộ lọc</span>
+  <select class="fs" id="f-thang" onchange="applyFilters()"><option value="">Tất cả tháng</option></select>
+  <select class="fs" id="f-nam" onchange="applyFilters()"><option value="">Tất cả năm</option></select>
+  <div class="fdiv"></div>
+  <select class="fs" id="f-squad" onchange="applyFilters()">
+    <option value="">Tất cả Squad</option>
+    <option>Squad 1</option><option>Squad 2</option><option>Squad 3</option><option>Squad 4</option>
+    <option>Squad 5</option><option>Squad 6</option><option>Squad 7</option><option>Squad 8</option>
+  </select>
+  <select class="fs" id="f-duan" onchange="applyFilters()">
+    <option value="">Tất cả Dự án</option>
+    <option>SSP</option><option>KPI</option><option>ALM</option><option>SAHA BRANCH</option>
+    <option>Edoc</option><option>Website</option><option>Reward</option><option>Sinh lời TĐ</option>
+  </select>
+  <select class="fs" id="f-nhom" onchange="applyFilters()">
+    <option value="">Tất cả Nhóm</option>
+    <option>TT Nội bộ</option><option>TT Khách hàng</option>
+    <option>Đào tạo & Sự kiện</option><option>Xử lý vấn đề</option><option>Đo lường</option>
+    <option>Lập kế hoạch</option><option>Thực hiện</option>
+  </select>
+  <select class="fs" id="f-hang" onchange="applyFilters()"><option value="">Tất cả Hạng mục</option></select>
+  <button class="f-reset" onclick="resetFilters()">✕ Xóa tất cả</button>
+</div>
+
+<div class="main">
+  <div class="alert" id="alert-box" style="display:none">
+    <span style="font-size:20px">⚠️</span>
+    <div>
+      <strong>Chưa cấu hình Google Sheets ID.</strong><br>
+      Mở file HTML → tìm <code style="background:var(--bg3);padding:1px 5px;border-radius:3px">const SHEET_ID = ''</code> → điền ID Google Sheets của bạn.<br>
+      <small style="color:var(--txt3)">ID nằm trong URL: docs.google.com/spreadsheets/d/<strong>[ID_Ở_ĐÂY]</strong>/edit · Sheets phải để "Anyone with link can view"</small>
+    </div>
+  </div>
+
+  <!-- SECTION 1: SCORECARD -->
+  <div>
+    <div class="sh"><div class="sh-dot" style="background:var(--or)"></div><span class="sh-title">Tổng quan</span><div class="sh-line"></div><span class="sh-hint" id="period-lbl"></span></div>
+    <div class="sg">
+      <div class="sc or">
+        <span class="sc-icon">📊</span>
+        <div class="sc-label">Tổng hoạt động</div>
+        <div class="sc-val" id="sc-total">—</div>
+        <span class="sc-badge b-or">3 nguồn dữ liệu</span>
+      </div>
+      <div class="sc nv">
+        <span class="sc-icon">👥</span>
+        <div class="sc-label">Hoạt động Squad</div>
+        <div class="sc-val" id="sc-squad">—</div>
+        <span class="sc-badge b-nv">8 Squads</span>
+      </div>
+      <div class="sc pu">
+        <span class="sc-icon">🗂️</span>
+        <div class="sc-label">Hoạt động Dự án</div>
+        <div class="sc-val" id="sc-duan">—</div>
+        <span class="sc-badge b-pu">8 Dự án</span>
+      </div>
+      <div class="sc tl">
+        <span class="sc-icon">🌱</span>
+        <div class="sc-label">Văn hóa Chuyển đổi</div>
+        <div class="sc-val" id="sc-vh">—</div>
+        <span class="sc-badge b-tl">6 Chương trình</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: TREND + DONUT + MINI -->
+  <div>
+    <div class="sh"><div class="sh-dot" style="background:var(--nv2)"></div><span class="sh-title">Xu hướng & Phân bổ</span><div class="sh-line"></div></div>
+    <div class="g21">
+      <div class="cc" id="cc-trend">
+        <div class="cc-head">
+          <div><div class="cc-title">Xu hướng hoạt động theo tháng</div><div class="cc-sub">So sánh 3 mảng · Click vào điểm để lọc theo tháng</div></div>
+          <span class="tag t-gr">Line chart</span>
+        </div>
+        <canvas id="chart-trend" height="110"></canvas>
+        <div class="legend">
+          <div class="li"><div class="ll" style="background:#7B9EFF"></div>Squad</div>
+          <div class="li"><div class="ll" style="background:var(--purple)"></div>Dự án</div>
+          <div class="li"><div class="ll" style="background:var(--teal)"></div>Văn hóa</div>
+        </div>
+        <div class="click-hint">💡 Click vào điểm trên biểu đồ để lọc theo tháng đó</div>
+      </div>
+      <div class="cc">
+        <div class="cc-head">
+          <div><div class="cc-title">Phân bổ theo mảng</div><div class="cc-sub">Click vào phần để lọc</div></div>
+          <span class="tag t-or">Donut</span>
+        </div>
+        <canvas id="chart-donut" height="170"></canvas>
+        <div class="legend" id="donut-legend"></div>
+        <div class="mini-stats" id="mini-stats"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 3: SQUAD + DUAN -->
+  <div>
+    <div class="sh"><div class="sh-dot" style="background:#7B9EFF"></div><span class="sh-title">Chi tiết Squad & Dự án</span><div class="sh-line"></div></div>
+    <div class="g2">
+      <div class="cc" id="cc-squad">
+        <div class="cc-head">
+          <div><div class="cc-title">Hoạt động theo Squad</div><div class="cc-sub">Click cột để lọc theo Squad</div></div>
+          <span class="tag t-nv">Bar chart</span>
+        </div>
+        <canvas id="chart-squad" height="130"></canvas>
+        <div class="click-hint">💡 Click vào cột để lọc Squad đó trên toàn dashboard</div>
+      </div>
+      <div class="cc" id="cc-duan">
+        <div class="cc-head">
+          <div><div class="cc-title">Hoạt động theo Dự án</div><div class="cc-sub">Click cột để lọc theo Dự án</div></div>
+          <span class="tag t-pu">Bar chart</span>
+        </div>
+        <canvas id="chart-duan" height="130"></canvas>
+        <div class="click-hint">💡 Click vào cột để lọc Dự án đó trên toàn dashboard</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 4: NHOM + HANG MUC + VAN HOA -->
+  <div>
+    <div class="sh"><div class="sh-dot" style="background:var(--teal)"></div><span class="sh-title">Nhóm, Hạng mục & Văn hóa</span><div class="sh-line"></div></div>
+    <div class="g3">
+      <div class="cc">
+        <div class="cc-head">
+          <div><div class="cc-title">Top Nhóm hoạt động</div><div class="cc-sub">Click để lọc theo nhóm</div></div>
+          <span class="tag t-or">Bar ngang</span>
+        </div>
+        <div class="prog-wrap" id="prog-nhom"><div class="nodata"><div class="spinner"></div></div></div>
+      </div>
+      <div class="cc">
+        <div class="cc-head">
+          <div><div class="cc-title">Top Hạng mục</div><div class="cc-sub">Click để lọc theo hạng mục</div></div>
+          <span class="tag t-tl">Bar ngang</span>
+        </div>
+        <div class="prog-wrap" id="prog-hang"><div class="nodata"><div class="spinner"></div></div></div>
+      </div>
+      <div class="cc" id="cc-vh">
+        <div class="cc-head">
+          <div><div class="cc-title">Văn hóa Chuyển đổi</div><div class="cc-sub">Click cột để lọc chương trình</div></div>
+          <span class="tag t-tl">Stacked bar</span>
+        </div>
+        <canvas id="chart-vh" height="160"></canvas>
+        <div class="click-hint">💡 Click để lọc chương trình</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 5: SQUAD GROUPED + HANG MUC RADAR -->
+  <div>
+    <div class="sh"><div class="sh-dot" style="background:var(--purple)"></div><span class="sh-title">Phân tích chuyên sâu</span><div class="sh-line"></div></div>
+    <div class="g2">
+      <div class="cc">
+        <div class="cc-head">
+          <div><div class="cc-title">So sánh Squad theo Nhóm hoạt động</div><div class="cc-sub">Grouped bar · Click để lọc</div></div>
+          <span class="tag t-nv">Grouped bar</span>
+        </div>
+        <canvas id="chart-grouped" height="140"></canvas>
+        <div class="legend" id="grouped-legend"></div>
+      </div>
+      <div class="cc">
+        <div class="cc-head">
+          <div><div class="cc-title">Phân bổ kênh Truyền thông nội bộ</div><div class="cc-sub">Tổng hợp Bản tin, FB, Zalo, Teams, Hub</div></div>
+          <span class="tag t-pu">Pie chart</span>
+        </div>
+        <canvas id="chart-kenh" height="170"></canvas>
+        <div class="legend" id="kenh-legend"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 6: TABLE -->
+  <div>
+    <div class="sh"><div class="sh-dot" style="background:var(--or)"></div><span class="sh-title">Bảng dữ liệu chi tiết</span><div class="sh-line"></div><span class="sh-hint">Click hàng để highlight · Click tiêu đề để sắp xếp</span></div>
+    <div class="tabs">
+      <div class="tb act" onclick="switchTab('tab-sq',this)">👥 Squad</div>
+      <div class="tb" onclick="switchTab('tab-du',this)">🗂️ Dự án</div>
+      <div class="tb" onclick="switchTab('tab-vh',this)">🌱 Văn hóa</div>
+    </div>
+    <div id="tab-sq" class="tbc act">
+      <div class="tscroll"><table class="dt">
+        <thead><tr><th>#</th><th class="sort" onclick="sortTable('tbody-sq',1)">Squad ↕</th><th class="sort" onclick="sortTable('tbody-sq',2)">Nhóm ↕</th><th class="sort" onclick="sortTable('tbody-sq',3)">Hạng mục ↕</th><th class="sort" onclick="sortTable('tbody-sq',4)">Tháng ↕</th><th class="num sort" onclick="sortTable('tbody-sq',5)">Số lượng ↕</th><th>Đơn vị</th></tr></thead>
+        <tbody id="tbody-sq"><tr><td colspan="7"><div class="nodata"><div class="spinner"></div></div></td></tr></tbody>
+      </table></div>
+    </div>
+    <div id="tab-du" class="tbc">
+      <div class="tscroll"><table class="dt">
+        <thead><tr><th>#</th><th class="sort" onclick="sortTable('tbody-du',1)">Dự án ↕</th><th class="sort" onclick="sortTable('tbody-du',2)">Nhóm ↕</th><th class="sort" onclick="sortTable('tbody-du',3)">Hạng mục ↕</th><th class="sort" onclick="sortTable('tbody-du',4)">Tháng ↕</th><th class="num sort" onclick="sortTable('tbody-du',5)">Số lượng ↕</th><th>Đơn vị</th></tr></thead>
+        <tbody id="tbody-du"><tr><td colspan="7"><div class="nodata"><div class="spinner"></div></div></td></tr></tbody>
+      </table></div>
+    </div>
+    <div id="tab-vh" class="tbc">
+      <div class="tscroll"><table class="dt">
+        <thead><tr><th>#</th><th class="sort" onclick="sortTable('tbody-vh',1)">Chương trình ↕</th><th class="sort" onclick="sortTable('tbody-vh',2)">Hạng mục ↕</th><th class="sort" onclick="sortTable('tbody-vh',3)">Tháng ↕</th><th class="num sort" onclick="sortTable('tbody-vh',4)">Số lượng ↕</th><th>Đơn vị</th></tr></thead>
+        <tbody id="tbody-vh"><tr><td colspan="6"><div class="nodata"><div class="spinner"></div></div></td></tr></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <strong style="color:var(--or)">SHB</strong> — Change Management Dashboard · SAHA Digital Transformation<br>
+    Dữ liệu tự động từ Google Sheets · Cập nhật mỗi lần tải trang · <span id="footer-time"></span>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// ⚙️  CẤU HÌNH — CHỈ SỬA DÒNG NÀY
+// ══════════════════════════════════════════════════════════════
+const SHEET_ID   = '1NizaweChy2WtJWenPYkxrtexk2-L4dgQYYYA6Qju7jo';          // ← Dán ID Google Sheets vào đây
+const TAB_SQUAD  = 'DATA_SQUAD';
+const TAB_DUAN   = 'DATA_DUAN';
+const TAB_VANHOA = 'DATA_VANHOA';
+// ══════════════════════════════════════════════════════════════
+
+const OR='#F47920',NV='#7B9EFF',TEAL='#00BFA5',PU='#9F7AEA',GR='#48BB78';
+const OR2='rgba(244,121,32,.2)',NV2='rgba(123,158,255,.15)',TEAL2='rgba(0,191,165,.15)',PU2='rgba(159,122,234,.15)';
+const COLORS=[OR,NV,TEAL,PU,GR,'#FC8181','#F6AD55','#68D391'];
+
+let raw={sq:[],du:[],vh:[]}, charts={}, sortState={}, activeFilters={};
+
+// ── FETCH ─────────────────────────────────────────────────────
+async function fetchSheet(tab){
+  const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tab)}&headers=1`;
+  const res=await fetch(url);
+  const txt=await res.text();
+  const json=JSON.parse(txt.substring(47).slice(0,-2));
+  const cols=json.table.cols.map(c=>c.label);
+  return json.table.rows
+    .map(r=>{const o={};r.c.forEach((c,i)=>{o[cols[i]]=c?c.v:''});return o;})
+    .filter(r=>r[cols[0]]!==''&&r[cols[0]]!=null);
+}
+
+async function fetchAllData(){
+  if(!SHEET_ID){document.getElementById('alert-box').style.display='flex';renderDemo();return;}
+  document.getElementById('last-update').textContent='Đang tải...';
+  try{
+    [raw.sq,raw.du,raw.vh]=await Promise.all([fetchSheet(TAB_SQUAD),fetchSheet(TAB_DUAN),fetchSheet(TAB_VANHOA)]);
+    populateFilters();
+    applyFilters();
+    const now=new Date().toLocaleString('vi-VN');
+    document.getElementById('last-update').textContent='Cập nhật: '+now;
+    document.getElementById('footer-time').textContent='Tải lúc '+now;
+  }catch(e){
+    document.getElementById('alert-box').style.display='flex';
+    document.getElementById('alert-box').querySelector('div').innerHTML='<strong>Lỗi tải dữ liệu.</strong> Kiểm tra SHEET_ID và chế độ chia sẻ Sheets.<br><small style="color:var(--txt3)">'+e.message+'</small>';
+    renderDemo();
+  }
+}
+
+// ── DEMO DATA (khi chưa có Sheets) ───────────────────────────
+function renderDemo(){
+  const months=['2025-01','2025-02','2025-03','2025-04'];
+  const squads=['Squad 1','Squad 2','Squad 3','Squad 4','Squad 5','Squad 6','Squad 7','Squad 8'];
+  const duans=['SSP','KPI','ALM','SAHA BRANCH','Edoc','Website','Reward','Sinh lời TĐ'];
+  const nhoms=['TT Nội bộ','TT Khách hàng','Đào tạo & Sự kiện','Xử lý vấn đề','Đo lường'];
+  const hangs=['Bản tin','Facebook','Zalo','Teams','Hub','Tổ chức đào tạo','Tổ chức sự kiện','Khảo sát','Site visit'];
+  const progs=['Townhall','Transformation Talk','Khảo sát hài lòng','SAHA Next Gen','Liên minh chuyển đổi'];
+  raw.sq=[];raw.du=[];raw.vh=[];
+  months.forEach(m=>{
+    squads.forEach(s=>hangs.forEach((h,i)=>{
+      if(Math.random()>.4) raw.sq.push({Thang:m,Nam:m.split('-')[0],Squad:s,Nhom:nhoms[i%nhoms.length],Hang_muc:h,So_luong:Math.floor(Math.random()*10)+1,Don_vi:'Lần'});
+    }));
+    duans.forEach(d=>hangs.forEach((h,i)=>{
+      if(Math.random()>.4) raw.du.push({Thang:m,Nam:m.split('-')[0],Du_an:d,Nhom:nhoms[i%nhoms.length],Hang_muc:h,So_luong:Math.floor(Math.random()*8)+1,Don_vi:'Lần'});
+    }));
+    progs.forEach(p=>['Tổ chức','Bản tin','Post Zalo','Post Teams'].forEach(h=>{
+      if(Math.random()>.3) raw.vh.push({Thang:m,Nam:m.split('-')[0],Chuong_trinh:p,Hang_muc:h,So_luong:Math.floor(Math.random()*5)+1,Don_vi:'Lần'});
+    }));
+  });
+  populateFilters();applyFilters();
+  document.getElementById('last-update').textContent='⚠️ Dữ liệu mẫu (demo)';
+}
+
+// ── FILTERS ───────────────────────────────────────────────────
+function populateFilters(){
+  const all=[...raw.sq,...raw.du,...raw.vh];
+  fill('f-thang',[...new Set(all.map(r=>r.Thang||'').filter(Boolean))].sort());
+  fill('f-nam',[...new Set(all.map(r=>String(r.Nam||'').split('.')[0]).filter(Boolean))].sort());
+  fill('f-hang',[...new Set([...raw.sq,...raw.du].map(r=>r.Hang_muc||'').filter(Boolean))].sort());
+}
+
+function fill(id,opts){
+  const s=document.getElementById(id),cur=s.value;
+  while(s.options.length>1)s.remove(1);
+  opts.forEach(o=>{const op=document.createElement('option');op.value=op.textContent=o;s.appendChild(op);});
+  if(cur)s.value=cur;
+}
+
+function gf(){
+  return{
+    thang:v('f-thang').trim(),
+    nam:v('f-nam').trim(),
+    squad:v('f-squad').trim(),
+    duan:v('f-duan').trim(),
+    nhom:v('f-nhom').trim(),
+    hang:v('f-hang').trim()
+  };
+}
+function v(id){return document.getElementById(id).value;}
+
+function fd(data,type,f){
+  return data.filter(r=>{
+    if(f.thang&&String(r.Thang||'').trim()!==String(f.thang).trim())return false;
+    if(f.nam&&String(r.Nam||'').split('.')[0].trim()!==String(f.nam).trim())return false;
+    if(f.nhom&&String(r.Nhom||'').trim()!==String(f.nhom).trim())return false;
+    if(f.hang&&String(r.Hang_muc||'').trim()!==String(f.hang).trim())return false;
+    if(type==='sq'&&f.squad&&String(r.Squad||'').trim()!==String(f.squad).trim())return false;
+    if(type==='du'&&f.duan&&String(r.Du_an||'').trim()!==String(f.duan).trim())return false;
+    return true;
+  });
+}
+
+function applyFilters(){
+  const f=gf();
+  const sq=fd(raw.sq,'sq',f), du=fd(raw.du,'du',f), vh=fd(raw.vh,'vh',f);
+  updateActiveFiltersBar(f);
+  updateScores(sq,du,vh);
+  buildTrend(sq,du,vh);
+  buildDonut(sq,du,vh);
+  buildSquad(sq);
+  buildDuan(du);
+  buildNhom(sq,du);
+  buildHang(sq,du);
+  buildVH(vh);
+  buildGrouped(sq);
+  buildKenh(sq,du);
+  buildTables(sq,du,vh);
+}
+
+function setFilter(key,val){
+  const el=document.getElementById('f-'+key);
+  if(!el){console.warn('No filter element: f-'+key);applyFilters();return;}
+  // Toggle: click same value again = clear filter
+  if(el.value===String(val)) el.value='';
+  else el.value=val;
+  applyFilters();
+}
+
+function resetFilters(){
+  ['f-thang','f-nam','f-squad','f-duan','f-nhom','f-hang'].forEach(id=>document.getElementById(id).value='');
+  applyFilters();
+}
+
+function updateActiveFiltersBar(f){
+  const bar=document.getElementById('active-filters-bar');
+  const empty=document.getElementById('af-empty');
+  const chips=Object.entries({thang:f.thang,nam:f.nam,squad:f.squad,duan:f.duan,nhom:f.nhom,hang:f.hang})
+    .filter(([,v])=>v).map(([k,v])=>`<span class="af-chip" onclick="clearFilter('${k}')">${v} <span class="x">✕</span></span>`).join('');
+  if(chips){empty.style.display='none';bar.innerHTML='<span class="fl">Đang lọc:</span>'+chips+'<button class="f-reset" onclick="resetFilters()" style="margin-left:auto">✕ Xóa tất cả</button>';}
+  else{bar.innerHTML='<span class="fl">Đang lọc:</span><span class="af-empty">Không có bộ lọc — đang hiển thị tất cả dữ liệu</span>';}
+}
+
+function clearFilter(k){document.getElementById('f-'+k).value='';applyFilters();}
+
+// ── HELPERS ───────────────────────────────────────────────────
+const sum=arr=>arr.reduce((a,r)=>a+(Number(r.So_luong)||0),0);
+const grp=(arr,key)=>arr.reduce((a,r)=>{const k=r[key]||'?';a[k]=(a[k]||0)+(Number(r.So_luong)||0);return a;},{});
+const ms=arr=>[...new Set(arr.map(r=>r.Thang||'').filter(Boolean))].sort();
+const fmt=n=>n===0?'—':Number(n).toLocaleString('vi-VN');
+
+// ── SCORES ────────────────────────────────────────────────────
+function updateScores(sq,du,vh){
+  const s=sum(sq),d=sum(du),vv=sum(vh);
+  document.getElementById('sc-total').textContent=fmt(s+d+vv);
+  document.getElementById('sc-squad').textContent=fmt(s);
+  document.getElementById('sc-duan').textContent=fmt(d);
+  document.getElementById('sc-vh').textContent=fmt(vv);
+  const f=gf();
+  document.getElementById('period-lbl').textContent=f.thang?'Tháng '+f.thang:f.nam?'Năm '+f.nam:'Toàn bộ thời gian';
+}
+
+// ── TREND ─────────────────────────────────────────────────────
+function buildTrend(sq,du,vh){
+  const all=[...sq,...du,...vh], m=ms(all);
+  if(!m.length){dc('chart-trend');return;}
+  const d=(a,mn)=>a.filter(r=>r.Thang===mn).reduce((s,r)=>s+(Number(r.So_luong)||0),0);
+  bc('chart-trend','line',{
+    labels:m,
+    datasets:[
+      {label:'Squad',data:m.map(mn=>d(sq,mn)),borderColor:NV,backgroundColor:'rgba(123,158,255,.1)',tension:.4,fill:true,pointRadius:5,pointHoverRadius:8,pointBackgroundColor:NV},
+      {label:'Dự án',data:m.map(mn=>d(du,mn)),borderColor:PU,backgroundColor:'rgba(159,122,234,.1)',tension:.4,fill:true,pointRadius:5,pointHoverRadius:8,pointBackgroundColor:PU},
+      {label:'Văn hóa',data:m.map(mn=>d(vh,mn)),borderColor:TEAL,backgroundColor:'rgba(0,191,165,.1)',tension:.4,fill:true,pointRadius:5,pointHoverRadius:8,pointBackgroundColor:TEAL},
+    ]
+  },{
+    onClick:(e,el)=>{if(el.length){setFilter('thang',String(m[el[0].index]));}},
+    scales:{y:{beginAtZero:true,grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#9BA8BF',font:{size:10}}},x:{grid:{display:false},ticks:{color:'#9BA8BF',font:{size:10}}}},
+    plugins:{legend:{display:false},tooltip:{backgroundColor:'#1C2333',titleColor:'#E8EDF5',bodyColor:'#9BA8BF',borderColor:'#3D4F6B',borderWidth:1}}
+  });
+}
+
+// ── DONUT ─────────────────────────────────────────────────────
+function buildDonut(sq,du,vh){
+  const s=sum(sq),d=sum(du),vv=sum(vh),tot=s+d+vv;
+  if(!tot){dc('chart-donut');return;}
+  bc('chart-donut','doughnut',{
+    labels:['Squad','Dự án','Văn hóa'],
+    datasets:[{data:[s,d,vv],backgroundColor:[NV,PU,TEAL],borderWidth:0,hoverOffset:8}]
+  },{
+    onClick:(e,el)=>{
+      if(!el.length)return;
+      const lbl=['Squad','Dự án','Văn hóa'][el[0].index];
+    },
+    plugins:{legend:{display:false},tooltip:{backgroundColor:'#1C2333',titleColor:'#E8EDF5',bodyColor:'#9BA8BF',borderColor:'#3D4F6B',borderWidth:1,callbacks:{label:c=>` ${c.label}: ${fmt(c.raw)} (${Math.round(c.raw/tot*100)}%)`}}},
+    cutout:'65%'
+  });
+  document.getElementById('donut-legend').innerHTML=[['Squad',NV,s],['Dự án',PU,d],['Văn hóa',TEAL,vv]].map(([l,c,n])=>`<div class="li"><div class="ld" style="background:${c}"></div>${l}: <b style="color:var(--txt)">${fmt(n)}</b></div>`).join('');
+  document.getElementById('mini-stats').innerHTML=`<div class="mini-stat"><div class="ms-val">${Math.round(s/(tot||1)*100)}%</div><div class="ms-label">Squad</div></div><div class="mini-stat"><div class="ms-val">${Math.round(d/(tot||1)*100)}%</div><div class="ms-label">Dự án</div></div><div class="mini-stat"><div class="ms-val">${Math.round(vv/(tot||1)*100)}%</div><div class="ms-label">Văn hóa</div></div>`;
+}
+
+// ── SQUAD CHART ───────────────────────────────────────────────
+function buildSquad(sq){
+  const g=grp(sq,'Squad'),labs=Object.keys(g).sort();
+  if(!labs.length){dc('chart-squad');return;}
+  const mx=Math.max(...Object.values(g));
+  bc('chart-squad','bar',{
+    labels:labs,
+    datasets:[{label:'Hoạt động',data:labs.map(k=>g[k]),backgroundColor:labs.map(k=>g[k]===mx?OR:NV2),borderColor:labs.map(k=>g[k]===mx?OR:NV),borderWidth:1,borderRadius:5,borderSkipped:false}]
+  },{
+    onClick:(e,el)=>{if(el.length){setFilter('squad',labs[el[0].index]);}},
+    plugins:{legend:{display:false},tooltip:{backgroundColor:'#1C2333',titleColor:'#E8EDF5',bodyColor:'#9BA8BF',borderColor:'#3D4F6B',borderWidth:1}},
+    scales:{y:{beginAtZero:true,grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#9BA8BF',font:{size:10}}},x:{grid:{display:false},ticks:{color:'#9BA8BF',font:{size:10}}}}
+  });
+}
+
+// ── DUAN CHART ────────────────────────────────────────────────
+function buildDuan(du){
+  const g=grp(du,'Du_an'),labs=Object.keys(g).sort((a,b)=>g[b]-g[a]);
+  if(!labs.length){dc('chart-duan');return;}
+  const mx=Math.max(...Object.values(g));
+  bc('chart-duan','bar',{
+    labels:labs,
+    datasets:[{label:'Hoạt động',data:labs.map(k=>g[k]),backgroundColor:labs.map(k=>g[k]===mx?OR:PU2),borderColor:labs.map(k=>g[k]===mx?OR:PU),borderWidth:1,borderRadius:5,borderSkipped:false}]
+  },{
+    onClick:(e,el)=>{if(el.length){setFilter('duan',labs[el[0].index]);}},
+    plugins:{legend:{display:false},tooltip:{backgroundColor:'#1C2333',titleColor:'#E8EDF5',bodyColor:'#9BA8BF',borderColor:'#3D4F6B',borderWidth:1}},
+    scales:{y:{beginAtZero:true,grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#9BA8BF',font:{size:10}}},x:{grid:{display:false},ticks:{color:'#9BA8BF',font:{size:10},maxRotation:25}}}
+  });
+}
+
+// ── VAN HOA ───────────────────────────────────────────────────
+function buildVH(vh){
+  const m=ms(vh);if(!m.length){dc('chart-vh');return;}
+  const progs=[...new Set(vh.map(r=>r.Chuong_trinh||'').filter(Boolean))];
+  const clrs=[TEAL,'#4DD0C4',OR,NV,PU,'#FC8181'];
+  bc('chart-vh','bar',{
+    labels:m,
+    datasets:progs.map((p,i)=>({label:p,data:m.map(mn=>vh.filter(r=>r.Chuong_trinh===p&&r.Thang===mn).reduce((a,r)=>a+(Number(r.So_luong)||0),0)),backgroundColor:clrs[i%clrs.length],borderRadius:3,stack:'s'}))
+  },{
+    onClick:(e,el)=>{if(el.length){setFilter('thang',String(m[el[0].index]));}},
+    plugins:{legend:{position:'bottom',labels:{color:'#9BA8BF',font:{size:10},boxWidth:10,padding:8}},tooltip:{backgroundColor:'#1C2333',titleColor:'#E8EDF5',bodyColor:'#9BA8BF',borderColor:'#3D4F6B',borderWidth:1}},
+    scales:{y:{stacked:true,beginAtZero:true,grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#9BA8BF',font:{size:10}}},x:{stacked:true,grid:{display:false},ticks:{color:'#9BA8BF',font:{size:10}}}}
+  });
+}
+
+// ── NHOM PROGRESS ─────────────────────────────────────────────
+function buildNhom(sq,du){
+  const g=grp([...sq,...du],'Nhom'),sorted=Object.entries(g).sort((a,b)=>b[1]-a[1]);
+  const mx=sorted[0]?.[1]||1;
+  const clrs=[OR,NV,TEAL,PU,GR,'#FC8181'];
+  const cur=v('f-nhom');
+  document.getElementById('prog-nhom').innerHTML=sorted.map(([k,n],i)=>`
+    <div class="prog-row${cur===k?' active-filter':''}" onclick="setFilter('nhom',this.dataset.val)" data-val="${k}">
+      <div class="prog-name" title="${k}">${k}</div>
+      <div class="prog-track"><div class="prog-fill" style="width:${Math.round(n/mx*100)}%;background:${clrs[i%clrs.length]}"></div></div>
+      <div class="prog-val">${fmt(n)}</div>
+    </div>`).join('')||'<div class="nodata"><div>📭</div><div>Không có dữ liệu</div></div>';
+}
+
+// ── HANG MUC PROGRESS ─────────────────────────────────────────
+function buildHang(sq,du){
+  const g=grp([...sq,...du],'Hang_muc'),sorted=Object.entries(g).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const mx=sorted[0]?.[1]||1;
+  const clrs=[OR,TEAL,NV,PU,GR,OR,TEAL,NV,PU,GR];
+  const cur=v('f-hang');
+  document.getElementById('prog-hang').innerHTML=sorted.map(([k,n],i)=>`
+    <div class="prog-row${cur===k?' active-filter':''}" onclick="window.__pf('hang',this)" data-val="${k}">
+      <div class="prog-name" title="${k}">${k}</div>
+      <div class="prog-track"><div class="prog-fill" style="width:${Math.round(n/mx*100)}%;background:${clrs[i%clrs.length]}"></div></div>
+      <div class="prog-val">${fmt(n)}</div>
+    </div>`).join('')||'<div class="nodata"><div>📭</div><div>Không có dữ liệu</div></div>';
+}
+
+// ── GROUPED BAR ───────────────────────────────────────────────
+function buildGrouped(sq){
+  const squads=[...new Set(sq.map(r=>r.Squad).filter(Boolean))].sort();
+  const nhoms=[...new Set(sq.map(r=>r.Nhom).filter(Boolean))];
+  if(!squads.length||!nhoms.length){dc('chart-grouped');return;}
+  const clrs=[OR,NV,TEAL,PU,GR,'#FC8181','#F6AD55'];
+  bc('chart-grouped','bar',{
+    labels:squads,
+    datasets:nhoms.map((nh,i)=>({label:nh,data:squads.map(s=>sq.filter(r=>r.Squad===s&&r.Nhom===nh).reduce((a,r)=>a+(Number(r.So_luong)||0),0)),backgroundColor:clrs[i%clrs.length]+'99',borderColor:clrs[i%clrs.length],borderWidth:1,borderRadius:3}))
+  },{
+    onClick:(e,el)=>{if(el.length){setFilter('squad',String(squads[el[0].index]));}},
+    plugins:{legend:{display:false},tooltip:{backgroundColor:'#1C2333',titleColor:'#E8EDF5',bodyColor:'#9BA8BF',borderColor:'#3D4F6B',borderWidth:1}},
+    scales:{y:{beginAtZero:true,grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#9BA8BF',font:{size:10}}},x:{grid:{display:false},ticks:{color:'#9BA8BF',font:{size:10}}}}
+  });
+  document.getElementById('grouped-legend').innerHTML=nhoms.map((nh,i)=>`<div class="li"><div class="ld" style="background:${clrs[i%clrs.length]}"></div>${nh}</div>`).join('');
+}
+
+// ── KENH TT ───────────────────────────────────────────────────
+function buildKenh(sq,du){
+  const kenhNames=['Bản tin','Facebook','Zalo','Teams','Hub'];
+  const all=[...sq,...du].filter(r=>kenhNames.includes(r.Hang_muc));
+  const g=grp(all,'Hang_muc');
+  const labs=kenhNames.filter(k=>g[k]);
+  if(!labs.length){dc('chart-kenh');return;}
+  const clrs=[OR,NV,TEAL,PU,GR];
+  bc('chart-kenh','pie',{
+    labels:labs,
+    datasets:[{data:labs.map(k=>g[k]||0),backgroundColor:clrs,borderWidth:0,hoverOffset:6}]
+  },{
+    plugins:{legend:{display:false},tooltip:{backgroundColor:'#1C2333',titleColor:'#E8EDF5',bodyColor:'#9BA8BF',borderColor:'#3D4F6B',borderWidth:1,callbacks:{label:c=>{const tot=labs.reduce((a,k)=>a+(g[k]||0),0);return` ${c.label}: ${fmt(c.raw)} (${Math.round(c.raw/tot*100)}%)`;}}}},
+  });
+  document.getElementById('kenh-legend').innerHTML=labs.map((k,i)=>`<div class="li"><div class="ld" style="background:${clrs[i]}"></div>${k}: <b style="color:var(--txt)">${fmt(g[k])}</b></div>`).join('');
+}
+
+// ── TABLES ────────────────────────────────────────────────────
+function buildTables(sq,du,vh){
+  renderTbl('tbody-sq',sq.slice(0,300),['Squad','Nhom','Hang_muc','Thang','So_luong','Don_vi'],7);
+  renderTbl('tbody-du',du.slice(0,300),['Du_an','Nhom','Hang_muc','Thang','So_luong','Don_vi'],7);
+  renderTblVH('tbody-vh',vh.slice(0,300));
+}
+
+function renderTbl(id,data,keys,cols){
+  const tb=document.getElementById(id);
+  if(!data.length){tb.innerHTML=`<tr><td colspan="${cols}"><div class="nodata"><div>📭</div><div>Không có dữ liệu phù hợp</div></div></td></tr>`;return;}
+  tb.innerHTML=data.map((r,i)=>`<tr onclick="hlRow(this)">
+    <td><span class="rank ${i<1?'r1':i<3?'r2':'r3'}">${i+1}</span></td>
+    ${keys.map((k,j)=>`<td${j===4?' class="num"':''}>${j===4?fmt(Number(r[k]||0)):r[k]||'—'}</td>`).join('')}
+  </tr>`).join('');
+}
+
+function renderTblVH(id,data){
+  const tb=document.getElementById(id);
+  if(!data.length){tb.innerHTML='<tr><td colspan="6"><div class="nodata"><div>📭</div><div>Không có dữ liệu</div></div></td></tr>';return;}
+  tb.innerHTML=data.map((r,i)=>`<tr onclick="hlRow(this)">
+    <td><span class="rank ${i<1?'r1':i<3?'r2':'r3'}">${i+1}</span></td>
+    <td>${r.Chuong_trinh||'—'}</td><td>${r.Hang_muc||'—'}</td><td>${r.Thang||'—'}</td>
+    <td class="num">${fmt(Number(r.So_luong||0))}</td><td>${r.Don_vi||'—'}</td>
+  </tr>`).join('');
+}
+
+function hlRow(tr){tr.classList.toggle('row-selected');}
+
+// ── SORT TABLE ────────────────────────────────────────────────
+function sortTable(tbodyId,colIdx){
+  const tb=document.getElementById(tbodyId);
+  const rows=[...tb.querySelectorAll('tr')].filter(r=>!r.querySelector('.nodata'));
+  const key=tbodyId+colIdx;
+  sortState[key]=!sortState[key];
+  rows.sort((a,b)=>{
+    const av=a.cells[colIdx]?.textContent.trim()||'';
+    const bv=b.cells[colIdx]?.textContent.trim()||'';
+    const an=Number(av.replace(/[,\.]/g,'')),bn=Number(bv.replace(/[,\.]/g,''));
+    const cmp=isNaN(an)||isNaN(bn)?av.localeCompare(bv,'vi'):an-bn;
+    return sortState[key]?cmp:-cmp;
+  });
+  rows.forEach(r=>tb.appendChild(r));
+}
+
+// ── CHART BUILDER ─────────────────────────────────────────────
+function bc(id,type,data,opts){
+  dc(id);
+  const ctx=document.getElementById(id)?.getContext('2d');
+  if(!ctx)return;
+  charts[id]=new Chart(ctx,{type,data,options:{responsive:true,maintainAspectRatio:true,cursor:'pointer',...opts}});
+}
+function dc(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+
+// ── TABS ──────────────────────────────────────────────────────
+function switchTab(id,el){
+  document.querySelectorAll('.tbc').forEach(t=>t.classList.remove('act'));
+  document.querySelectorAll('.tb').forEach(t=>t.classList.remove('act'));
+  document.getElementById(id).classList.add('act');
+  el.classList.add('act');
+}
+
+
+// Helper for progress bar clicks (avoids apostrophe issues in onclick)
+window.__pf = function(key, el){ setFilter(key, el.getAttribute('data-val')); };
+
+// ── INIT ──────────────────────────────────────────────────────
+fetchAllData();
+</script>
+</body>
+</html>
