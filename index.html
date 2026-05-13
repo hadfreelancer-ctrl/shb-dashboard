@@ -14,6 +14,8 @@
 <body>
 <div id="root"></div>
 <script type="text/babel" data-presets="react">
+
+
 const { useState, useMemo, useRef, useEffect } = React;
 const { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell } = Recharts;
 
@@ -538,12 +540,11 @@ const DashboardApp = function Dashboard(){
 }
 
 
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(React.createElement(DashboardApp));
 
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(React.createElement(DashboardApp));
 
 </script>
 </body>
