@@ -25,6 +25,7 @@
 
 
 
+
 const { useState, useMemo, useRef, useEffect } = React;
 const { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell } = Recharts;
 
@@ -74,12 +75,18 @@ function parseSheetData(values) {
       assignee:  String(obj.assignee||obj.nguoi_thuc_hien||obj.nguoi_th||"Unassigned"),
       status:    String(obj.status||obj.trang_thai||""),
       due:       parseGvizDate(obj.due_date||obj.due||obj.han||obj.han_xu_ly||""),
-      updated:   parseGvizDate(obj.updated||obj.ngay_cap_nhat||obj.cap_nhat||""),
+      updated:   parseGvizDate(obj.updated||obj.ngay_cap_nhat||obj.cap_nhat||"") || parseGvizDate(obj.ngay_tao||obj.ngay_tao_||""),
       note:      String(obj.note||obj.description||obj.ghi_chu||""),
       work_type: String(obj.work_type||obj.worktype||obj.work_type||""),
     };
     return mapped;
-  }).filter(d=>d.key && d.work_type==="Task");
+  }).filter(d=>{
+    if(!d.key) return false;
+    // Show Tasks and Sub-tasks, exclude Epics
+    const wt=(d.work_type||"").toLowerCase();
+    if(wt==="epic") return false;
+    return true;
+  });
 }
 
 async function fetchSheetData() {
@@ -368,7 +375,7 @@ const DashboardApp = function Dashboard(){
   const[sidebarOpen,setSidebarOpen]=useState(typeof window!=="undefined"?window.innerWidth>1024:true);
   const[showSettings,setShowSettings]=useState(false);
   const[showPicker,setShowPicker]=useState(false);
-  const[dateRange,setDateRange]=useState({start:fmt(new Date(new Date(TODAY).getTime()-29*864e5)),end:TODAY});
+  const[dateRange,setDateRange]=useState({start:fmt(new Date(new Date(TODAY).getTime()-180*864e5)),end:TODAY});
   const[wlSort,setWlSort]=useState("load");
   const[trendMode,setTrendMode]=useState("filter");
   const[trendDimOverride,setTrendDimOverride]=useState(null);
@@ -394,7 +401,7 @@ useEffect(()=>{try{localStorage.setItem("cm_cfg_v10",JSON.stringify(cfg));}catch
     try{
       const rows=await fetchSheetData();
       console.log("[Dashboard] Rows fetched:", rows.length, rows[0]||"(empty)");
-      setDebugInfo(`Sheet trả về ${rows.length} dòng${rows.length>0?" · Dòng đầu: key="+rows[0].key+", status="+rows[0].status+", updated="+rows[0].updated:"" }`);
+      setDebugInfo(`Sheet trả về ${rows.length} dòng${rows.length>0?" · Dòng đầu: key="+rows[0].key+", status="+rows[0].status+", updated="+rows[0].updated+", work_type="+rows[0].work_type:""}`);
       if(rows.length>0){setLiveData(rows);setLastSync(new Date());}
       else{setSyncError("Sheet trả về 0 dòng — kiểm tra tên cột và date range");}
     }catch(e){setSyncError(e.message);}
@@ -410,7 +417,11 @@ useEffect(()=>{try{localStorage.setItem("cm_cfg_v10",JSON.stringify(cfg));}catch
   const days=diffDays(startDate,endDate)+1,unit=getUnit(days),unitLbl=getUnitLabel(unit);
   const prevEnd=new Date(startDate.getTime()-864e5),prevStart=new Date(prevEnd.getTime()-(days-1)*864e5);
   const prevLabel=`${fmtD(prevStart)}–${fmtD(prevEnd)}`;
-  const inRange=d=>d.updated>=dateRange.start&&d.updated<=dateRange.end+"T23:59:59";
+  const inRange=d=>{
+    const dt=d.updated||d.ngay_tao||"";
+    if(!dt) return true; // include if no date
+    return dt>=dateRange.start&&dt<=dateRange.end+"T23:59:59";
+  };
   const rangeRaw=ACTIVE_DATA.filter(inRange);
   const prevRaw=ACTIVE_DATA.filter(d=>d.updated>=fmt(prevStart)&&d.updated<=fmt(prevEnd)+"T23:59:59");
   const getGrp=status=>getGroupForStatus(status,SG);
@@ -629,6 +640,7 @@ useEffect(()=>{try{localStorage.setItem("cm_cfg_v10",JSON.stringify(cfg));}catch
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(React.createElement(DashboardApp));
+
 
 
 
