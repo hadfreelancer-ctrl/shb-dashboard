@@ -95,6 +95,17 @@ async function fetchSheetData() {
     return [];
   }
 }
+  
+    return parseSheetData([cols, ...rows]);
+
+  } catch (err) {
+
+    console.error("FULL SHEET ERROR:", err);
+    alert(err.message);
+
+    return [];
+  }
+}
 
 const DEFAULT_STATUS_GROUPS = [
   { id:"closed",     label:"Hoàn thành",         color:"#00C9A7", icon:"✓",  jiraStatuses:["CLOSED","Closed","Done"] },
