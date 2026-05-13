@@ -60,7 +60,17 @@ async function fetchSheetData() {
 
     const resp = await fetch(url);
 
-    const json = await resp.json();
+    console.log("STATUS:", resp.status);
+
+    const text = await resp.text();
+
+    console.log("RAW RESPONSE:", text);
+
+    const jsonText = text.match(
+      /google\.visualization\.Query\.setResponse\(([\s\S]*)\);/
+    )[1];
+
+    const json = JSON.parse(jsonText);
 
     const cols = json.table.cols.map(c => c.label || c.id);
 
@@ -70,11 +80,17 @@ async function fetchSheetData() {
         : []
     );
 
-    return parseSheetData([cols, ...rows]);
+    const parsed = parseSheetData([cols, ...rows]);
+
+    console.log("PARSED DATA:", parsed);
+
+    return parsed || [];
 
   } catch (err) {
 
-    console.error("Sheet Error:", err);
+    console.error("FULL SHEET ERROR:", err);
+
+    alert(err.message);
 
     return [];
   }
