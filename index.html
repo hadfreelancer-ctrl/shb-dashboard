@@ -60,7 +60,13 @@ async function fetchSheetData() {
 
     const resp = await fetch(url);
 
-    const json = await resp.json();
+    const text = await resp.text();
+
+    // Strip JSONP wrapper: /*O_o*/\ngoogle.visualization.Query.setResponse({...});
+    const jsonStr = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)?.[1];
+    if (!jsonStr) throw new Error("Không parse được response từ Sheet");
+
+    const json = JSON.parse(jsonStr);
 
     const cols = json.table.cols.map(c => c.label || c.id);
 
