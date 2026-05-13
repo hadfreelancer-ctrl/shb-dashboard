@@ -80,7 +80,11 @@ async function fetchSheetData() {
         : []
     );
 
-    return parseSheetData([cols, ...rows]);
+    const parsed = parseSheetData([cols, ...rows]);
+
+    console.log("PARSED DATA:", parsed);
+
+    return parsed || [];
 
   } catch (err) {
 
