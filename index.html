@@ -17,6 +17,7 @@
 
 
 
+
 const { useState, useMemo, useRef, useEffect } = React;
 const { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell } = Recharts;
 
@@ -348,7 +349,7 @@ const DashboardApp = function Dashboard(){
   const[dateRange,setDateRange]=useState({start:fmt(new Date(new Date(TODAY).getTime()-29*864e5)),end:TODAY});
   const[wlSort,setWlSort]=useState("load");
   const[trendMode,setTrendMode]=useState("filter");
-  const[trendDimension,setTrendDimension]=useState("loai"); // loai | nhom | assignee | hang_muc_chuan | doi_tuong // "filter" | "highlight"
+  const[trendDimOverride,setTrendDimOverride]=useState(null);
   const[tableSort,setTableSort]=useState({key:null,dir:"asc"});
   const[showTip,setShowTip]=useState(()=>{try{return !localStorage.getItem("cm_tip_seen_v1");}catch{return false;}});
   const[selectedTaskKeys,setSelectedTaskKeys]=useState([]);
@@ -415,16 +416,39 @@ const DashboardApp = function Dashboard(){
   const buckets=genBuckets(startDate,endDate,unit);
   const trendSource=trendMode==="filter"?data:rangeRaw;
   // Get unique dimension values for trend
+  // Auto-detect: which filter is active → use that as trend dimension
+  const trendDimension=trendDimOverride||(
+    selectedTaskKeys.length>0?"_task":
+    f.hang_muc_chuan?"hang_muc_chuan":
+    f.hang_muc?"hang_muc":
+    f.nhom?"_nhom":
+    f.assignee?"assignee":
+    f.doi_tuong?"doi_tuong":
+    f.loai?"loai":
+    "loai"
+  );
   const trendDimValues=trendDimension==="loai"
     ?[{key:"Squad",label:cfg.kpiLabels.squad,color:C.squad},{key:"Du_an",label:cfg.kpiLabels.duan,color:C.duan},{key:"Van_hoa",label:cfg.kpiLabels.vanhoa,color:C.vanhoa}]
-    :[...new Set(rangeRaw.map(d=>d[trendDimension]).filter(Boolean))].slice(0,6).map((k,i)=>({key:k,label:trendDimension==="nhom"?(cfg.nhomLabels[k]||k):k,color:["#7B9EFF","#00C9A7","#F47920","#A855F7","#F59E0B","#EC4899"][i%6]}));
+    :trendDimension==="_task"
+    ?selectedTaskKeys.slice(0,6).map((k,i)=>({key:k,label:k,color:["#7B9EFF","#00C9A7","#F47920","#A855F7","#F59E0B","#EC4899"][i%6]}))
+    :trendDimension==="_nhom"
+    ?[{key:f.nhom,label:cfg.nhomLabels[f.nhom]||f.nhom,color:"#7B9EFF"}]
+    :[...new Set(rangeRaw.map(d=>d[trendDimension]).filter(Boolean))].slice(0,6).map((k,i)=>({key:k,label:k,color:["#7B9EFF","#00C9A7","#F47920","#A855F7","#F59E0B","#EC4899"][i%6]}));
   const trendData=buckets.map(bk=>{
     const r=trendSource.filter(d=>getBucket(d.updated,unit)===bk);
     const rAll=rangeRaw.filter(d=>getBucket(d.updated,unit)===bk);
     const pt={label:bk};
     trendDimValues.forEach(dv=>{
-      pt[dv.key]=r.filter(d=>d[trendDimension]===dv.key).length;
-      pt[dv.key+"All"]=rAll.filter(d=>d[trendDimension]===dv.key).length;
+      if(trendDimension==="_task"){
+        pt[dv.key]=r.filter(d=>d.key===dv.key).length;
+        pt[dv.key+"All"]=rAll.filter(d=>d.key===dv.key).length;
+      } else if(trendDimension==="_nhom"){
+        pt[dv.key]=r.filter(d=>d.nhom===dv.key).length;
+        pt[dv.key+"All"]=rAll.filter(d=>d.nhom===dv.key).length;
+      } else {
+        pt[dv.key]=r.filter(d=>d[trendDimension]===dv.key).length;
+        pt[dv.key+"All"]=rAll.filter(d=>d[trendDimension]===dv.key).length;
+      }
     });
     return pt;
   });
@@ -477,6 +501,23 @@ const DashboardApp = function Dashboard(){
   const selTasks=selectedTaskKeys.map(k=>ACTIVE_DATA.find(t=>t.key===k)).filter(Boolean);
   const toggleTaskSel=k=>setSelectedTaskKeys(p=>p.includes(k)?p.filter(x=>x!==k):p.length>=MAX_SEL?p:[...p,k]);
   const allNhomK=[...new Set(ACTIVE_DATA.map(d=>d.nhom))];
+  
+  // Dynamic completion rate based on active filter
+  const completionRows=(()=>{
+    if(selectedTaskKeys.length>0||f.nhom||f.hang_muc||f.hang_muc_chuan||f.assignee){
+      // Show total only when filtering
+      return [{l:"Kết quả lọc",p:teamCR,c:"#00C9A7",note:total+" tasks"}];
+    }
+    if(f.loai==="Squad") return [{l:cfg.kpiLabels.squad,p:rS,c:"#00C9A7",note:sN+" tasks"}];
+    if(f.loai==="Du_an") return [{l:cfg.kpiLabels.duan,p:rD,c:"#00C9A7",note:dN+" tasks"}];
+    if(f.loai==="Van_hoa") return [{l:cfg.kpiLabels.vanhoa,p:rV,c:"#F59E0B",note:vN+" tasks"}];
+    return [
+      {l:cfg.kpiLabels.squad,p:rS,c:"#00C9A7",note:sN+" tasks"},
+      {l:cfg.kpiLabels.duan,p:rD,c:"#00C9A7",note:dN+" tasks"},
+      {l:cfg.kpiLabels.vanhoa,p:rV,c:"#F59E0B",note:vN+" tasks"},
+      {l:"Tổng",p:teamCR,c:C.squad,note:total+" tasks"}
+    ];
+  })();
   const sortedSections=Object.entries(cfg.sections).sort((a,b)=>a[1].order-b[1].order).filter(([,s])=>s.visible).map(([k])=>k);
   const endLbl=({x,y,value,index,color})=>index===trendData.length-1&&value>0?(<g><rect x={x+5} y={y-9} width={26} height={16} rx={4} fill="rgba(13,22,41,0.9)" stroke={color} strokeWidth={0.5}/><text x={x+18} y={y+2} textAnchor="middle" fill={color} fontSize="10" fontWeight="700">{value}</text></g>):null;
 
@@ -492,13 +533,21 @@ const DashboardApp = function Dashboard(){
       case "trend":return(<div key="trend"><div style={{display:"grid",gridTemplateColumns:"3fr 2fr",gap:10}}><Card><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12,flexWrap:"wrap",gap:8}}>
     <STitle title={sec.title} accent={C.squad} note={"Truc X: "+unitLbl+" · So voi: "+prevLabel}/>
     <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
-      <select value={trendDimension} onChange={e=>setTrendDimension(e.target.value)} style={{padding:"4px 8px",borderRadius:8,fontSize:10,cursor:"pointer",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",color:"#A0B0CC",outline:"none"}}>
-        <option value="loai">Theo Loại</option>
-        <option value="nhom">Theo Nhóm CV</option>
-        <option value="assignee">Theo Người TH</option>
-        <option value="hang_muc_chuan">Theo HM Chuẩn</option>
-        <option value="doi_tuong">Theo Đối tượng</option>
-      </select>
+      <div style={{display:"flex",alignItems:"center",gap:6}}>
+        <span style={{fontSize:9,color:"#3B4E6B"}}>Đang xem:</span>
+        <span style={{fontSize:10,fontWeight:600,color:"#A0B0CC",padding:"3px 8px",background:"rgba(255,255,255,0.05)",borderRadius:6,border:"1px solid rgba(255,255,255,0.08)"}}>
+          {trendDimension==="_task"?"Task được chọn":trendDimension==="_nhom"?"Nhóm: "+(cfg.nhomLabels[f.nhom]||f.nhom):trendDimension==="hang_muc_chuan"?"HM Chuẩn":trendDimension==="hang_muc"?"Hạng mục":trendDimension==="assignee"?"Người TH":trendDimension==="doi_tuong"?"Đối tượng":"Loại"}
+        </span>
+        <select value={trendDimOverride||""} onChange={e=>setTrendDimOverride(e.target.value||null)} style={{padding:"3px 7px",borderRadius:6,fontSize:10,cursor:"pointer",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",color:"#5B6E8C",outline:"none"}}>
+          <option value="">Auto</option>
+          <option value="loai">Loại</option>
+          <option value="nhom">Nhóm CV</option>
+          <option value="assignee">Người TH</option>
+          <option value="hang_muc_chuan">HM Chuẩn</option>
+          <option value="doi_tuong">Đối tượng</option>
+        </select>
+        {trendDimOverride&&<button onClick={()=>setTrendDimOverride(null)} style={{padding:"3px 7px",borderRadius:6,fontSize:10,background:"rgba(244,121,32,0.15)",border:"1px solid rgba(244,121,32,0.3)",color:C.accent,cursor:"pointer"}}>↺</button>}
+      </div>
       <div style={{display:"flex",gap:4}}>{[["filter","Lọc data"],["highlight","Làm nổi bật"]].map(([m,l])=><button key={m} onClick={()=>setTrendMode(m)} style={{padding:"4px 10px",borderRadius:8,fontSize:10,cursor:"pointer",fontWeight:600,background:trendMode===m?C.squad:"rgba(255,255,255,0.04)",border:trendMode===m?"none":"1px solid rgba(255,255,255,0.08)",color:trendMode===m?"#fff":"#5B6E8C"}}>{l}</button>)}
       </div>
     </div>
@@ -527,7 +576,11 @@ const DashboardApp = function Dashboard(){
           <div style={{display:"flex",alignItems:"center",gap:12}}><div style={{display:"flex",alignItems:"center",gap:4}}>{cfg.logoUrl?<img src={cfg.logoUrl} alt="logo" style={{width:36,height:36,objectFit:"contain",borderRadius:8}}/>:<div style={{width:32,height:32,background:"linear-gradient(135deg,#F47920,#1B2F6E)",borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:13,color:"#fff",letterSpacing:0.5}}>CM</div>}</div><div><h1 style={{fontWeight:800,fontSize:18,color:"#F0F4FF",letterSpacing:"-0.3px"}}>{cfg.appName}</h1><div style={{fontSize:10,color:"#3B4E6B",marginTop:2}}>{cfg.appSub}</div></div></div>
           <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap",justifyContent:"flex-end"}}>{Object.entries(f).filter(([,v])=>v).map(([k,v])=><span key={k} onClick={()=>toggle(k,v)} style={{padding:"3px 9px",background:`${C.accent}18`,border:`1px solid ${C.accent}35`,borderRadius:12,fontSize:10,color:C.accent,cursor:"pointer",whiteSpace:"nowrap"}}>{cfg.nhomLabels[v]||SG.find(g=>g.id===v)?.label||cfg.ui.loaiNames[v]||v} &#10005;</span>)}<div style={{position:"relative"}}>{showTip&&<div style={{position:"absolute",top:"calc(100% + 8px)",right:0,background:"#0D1629",border:`1px solid ${C.accent}50`,borderRadius:10,padding:"10px 14px",fontSize:11,color:"#E8EAF0",width:220,boxShadow:"0 12px 32px rgba(0,0,0,.5)",zIndex:50}}><div style={{position:"absolute",top:-5,right:18,width:9,height:9,background:"#0D1629",borderLeft:`1px solid ${C.accent}50`,borderTop:`1px solid ${C.accent}50`,transform:"rotate(45deg)"}}/><div style={{fontWeight:700,color:C.accent,fontSize:11,marginBottom:4}}>👋 Tuỳ chỉnh dashboard</div><div style={{color:"#8899BB",lineHeight:1.5,fontSize:11}}>Đổi tên cột, màu sắc, sắp xếp section — tất cả lưu tự động.</div><div onClick={()=>{setShowTip(false);try{localStorage.setItem("cm_tip_seen_v1","1");}catch{}}} style={{marginTop:8,fontSize:10,color:C.accent,cursor:"pointer",fontWeight:600}}>Đã hiểu →</div></div>}<button onClick={()=>{setShowSettings(true);setShowTip(false);try{localStorage.setItem("cm_tip_seen_v1","1");}catch{}}} style={{padding:"7px 12px",background:showTip?`${C.accent}20`:"rgba(255,255,255,0.05)",border:showTip?`1px solid ${C.accent}50`:"1px solid rgba(255,255,255,0.1)",borderRadius:8,color:showTip?C.accent:"#8899BB",fontSize:11,cursor:"pointer",display:"flex",alignItems:"center",gap:5,animation:showTip?"pulseTip 2s ease-in-out infinite":"none"}}>&#9881; Tuỳ chỉnh</button></div><button onClick={doFetch} disabled={loading} title={lastSync?"Cap nhat: "+lastSync.toLocaleTimeString():"Chua dong bo"} style={{padding:"7px 12px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,color:loading?"#F47920":"#8899BB",fontSize:11,cursor:loading?"default":"pointer",display:"flex",alignItems:"center",gap:4}}><span style={{display:"inline-block",animation:loading?"spin 1s linear infinite":"none",fontSize:13}}>&#8635;</span>{lastSync?lastSync.toLocaleTimeString("vi",{hour:"2-digit",minute:"2-digit"}):"Sync"}</button><button onClick={()=>window.print()} style={{padding:"7px 14px",background:"linear-gradient(135deg,"+C.accent+","+C.accent+"CC)",border:"none",borderRadius:8,color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer"}}>{cfg.pdfButton}</button></div>
         </div>
-        {loading&&!liveData&&<div style={{position:"fixed",inset:0,background:"rgba(8,14,28,0.85)",zIndex:400,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16}}><div style={{width:48,height:48,border:"3px solid rgba(255,255,255,0.1)",borderTop:"3px solid "+C.accent,borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/><div style={{fontSize:14,color:"#A0B0CC",fontWeight:500}}>Đang tải dữ liệu từ Google Sheet...</div><div style={{fontSize:11,color:"#3B4E6B"}}>Kết nối: DATA_ALL</div></div>}
+        {selectedTaskKeys.length>0&&<div style={{position:"sticky",top:0,zIndex:100,padding:"6px 18px",background:"linear-gradient(90deg,rgba(244,121,32,0.15),rgba(244,121,32,0.05))",borderBottom:"1px solid rgba(244,121,32,0.2)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+      <span style={{fontSize:11,color:C.accent,fontWeight:600}}>&#128203; Đang lọc chéo {selectedTaskKeys.length} task — toàn bộ chart & thẻ đang filter theo task này</span>
+      <button onClick={()=>setSelectedTaskKeys([])} style={{padding:"3px 10px",background:"rgba(244,121,32,0.2)",border:"1px solid rgba(244,121,32,0.3)",borderRadius:6,color:C.accent,fontSize:10,cursor:"pointer",fontWeight:600}}>✕ Bỏ chọn</button>
+    </div>}
+    {loading&&!liveData&&<div style={{position:"fixed",inset:0,background:"rgba(8,14,28,0.85)",zIndex:400,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16}}><div style={{width:48,height:48,border:"3px solid rgba(255,255,255,0.1)",borderTop:"3px solid "+C.accent,borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/><div style={{fontSize:14,color:"#A0B0CC",fontWeight:500}}>Đang tải dữ liệu từ Google Sheet...</div><div style={{fontSize:11,color:"#3B4E6B"}}>Kết nối: DATA_ALL</div></div>}
   {syncError&&<div style={{marginBottom:10,padding:"8px 14px",background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:8,fontSize:11,color:"#EF4444",display:"flex",justifyContent:"space-between",alignItems:"center"}}><span>&#9888; Loi ket noi Sheet: {syncError}</span><button onClick={doFetch} style={{background:"rgba(239,68,68,0.15)",border:"none",borderRadius:6,color:"#EF4444",fontSize:10,cursor:"pointer",padding:"2px 8px"}}>Thu lai</button></div>}{debugInfo&&!syncError&&<div style={{marginBottom:10,padding:"6px 14px",background:"rgba(0,201,167,0.06)",border:"1px solid rgba(0,201,167,0.2)",borderRadius:8,fontSize:10,color:"#00C9A7"}}>{debugInfo}</div>}
   <div style={{position:"relative",marginBottom:14}} ref={pickerRef}>
           <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}><button onClick={()=>setShowPicker(o=>!o)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",background:showPicker?`${C.accent}18`:"rgba(255,255,255,0.04)",border:showPicker?`1px solid ${C.accent}50`:"1px solid rgba(255,255,255,0.08)",borderRadius:10,cursor:"pointer",transition:"all .15s"}}><span style={{fontSize:14}}>&#128197;</span><div style={{textAlign:"left"}}><div style={{fontSize:12,fontWeight:600,color:"#E8EAF0"}}>{fmtD(startDate)} – {fmtD(endDate)}</div><div style={{fontSize:9,color:"#4B5EA6",marginTop:1}}>{days} ngày · So với: {prevLabel}</div></div><span style={{fontSize:11,color:"#4B5EA6"}}>▾</span></button><div style={{display:"flex",alignItems:"center",gap:6,padding:"5px 11px",background:"rgba(123,158,255,0.06)",border:"1px solid rgba(123,158,255,0.1)",borderRadius:8}}><span style={{fontSize:10,color:"#4B5EA6"}}>Đơn vị trục X:</span><span style={{fontSize:11,fontWeight:700,color:C.squad}}>{unitLbl}</span></div></div>
@@ -545,6 +598,7 @@ const DashboardApp = function Dashboard(){
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(React.createElement(DashboardApp));
+
 
 
 
