@@ -50,14 +50,34 @@ function parseSheetData(values) {
 }
 
 async function fetchSheetData() {
-  const url = "https://docs.google.com/spreadsheets/d/"+SHEET_ID+"/gviz/tq?tqx=out:json&sheet="+encodeURIComponent(SHEET_TAB);
-  const resp = await fetch(url);
-  const text = await resp.text();
-  // Google wraps response in google.visualization.Query.setResponse(...)
-  const json = JSON.parse(text.match(/google.visualization.Query.setResponse(([sS]*))/)[1]);
-  const cols = json.table.cols.map(c=>c.label||c.id);
-  const rows = json.table.rows.map(r=>r.c?r.c.map(cell=>cell?cell.v||cell.f||"":""):[]);
-  return parseSheetData([cols,...rows]);
+  try {
+
+    const url =
+      "https://docs.google.com/spreadsheets/d/" +
+      SHEET_ID +
+      "/gviz/tq?tqx=out:json&sheet=" +
+      encodeURIComponent(SHEET_TAB);
+
+    const resp = await fetch(url);
+
+    const json = await resp.json();
+
+    const cols = json.table.cols.map(c => c.label || c.id);
+
+    const rows = json.table.rows.map(r =>
+      r.c
+        ? r.c.map(cell => (cell ? cell.v || cell.f || "" : ""))
+        : []
+    );
+
+    return parseSheetData([cols, ...rows]);
+
+  } catch (err) {
+
+    console.error("Sheet Error:", err);
+
+    return sampleData;
+  }
 }
 
 const DEFAULT_STATUS_GROUPS = [
