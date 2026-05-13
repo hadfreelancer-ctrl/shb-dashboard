@@ -63,9 +63,10 @@ function parseSheetData(values) {
       due:       parseGvizDate(obj.due_date||obj.due||obj.han||obj.han_xu_ly||""),
       updated:   parseGvizDate(obj.updated||obj.ngay_cap_nhat||obj.cap_nhat||""),
       note:      String(obj.note||obj.description||obj.ghi_chu||""),
+      work_type: String(obj.work_type||obj.worktype||obj.work_type||""),
     };
     return mapped;
-  }).filter(d=>d.key);
+  }).filter(d=>d.key && d.work_type==="Task");
 }
 
 async function fetchSheetData() {
