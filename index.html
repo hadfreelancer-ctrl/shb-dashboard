@@ -24,6 +24,7 @@
 
 
 
+
 const { useState, useMemo, useRef, useEffect } = React;
 const { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell } = Recharts;
 
@@ -385,17 +386,7 @@ const DashboardApp = function Dashboard(){
   const pickerRef=useRef(null);const logoInputRef=useRef(null);const PER=20;
   const C=cfg.colors;const SG=cfg.statusGroups;
 
-  useEffect(()=>{
-    if(allHangMucChuan.length>0){
-      setCfg(prev=>{
-        const newLabels={...prev.hmChuanLabels};
-        let changed=false;
-        allHangMucChuan.forEach(k=>{if(!newLabels[k]){newLabels[k]=k;changed=true;}});
-        return changed?{...prev,hmChuanLabels:newLabels}:prev;
-      });
-    }
-  },[allHangMucChuan.length]);
-  useEffect(()=>{try{localStorage.setItem("cm_cfg_v10",JSON.stringify(cfg));}catch{};},[cfg]);
+useEffect(()=>{try{localStorage.setItem("cm_cfg_v10",JSON.stringify(cfg));}catch{};},[cfg]);
   
   // Fetch sheet data on mount + auto-refresh every 5 min
   const doFetch = async()=>{
@@ -518,6 +509,17 @@ const DashboardApp = function Dashboard(){
   // All unique hang_muc + hang_muc_chuan for filters
   const allHangMuc=[...new Set(ACTIVE_DATA.map(d=>d.hang_muc))].sort();
   const allHangMucChuan=[...new Set(ACTIVE_DATA.filter(d=>d.hang_muc_chuan).map(d=>d.hang_muc_chuan))].sort();
+  // Auto-populate hmChuanLabels when data loads
+  useEffect(()=>{
+    if(allHangMucChuan.length>0){
+      setCfg(prev=>{
+        const newLabels={...(prev.hmChuanLabels||{})};
+        let changed=false;
+        allHangMucChuan.forEach(k=>{if(!newLabels[k]){newLabels[k]=k;changed=true;}});
+        return changed?{...prev,hmChuanLabels:newLabels}:prev;
+      });
+    }
+  },[allHangMucChuan.join(',')]);
   const dtSquad=[...new Set(ACTIVE_DATA.filter(d=>d.loai==="Squad").map(d=>d.doi_tuong))].sort().map(dt=>({name:dt,t:data.filter(d=>d.doi_tuong===dt).length,_f:dt}));
   const dtDuan=[...new Set(ACTIVE_DATA.filter(d=>d.loai==="Du_an").map(d=>d.doi_tuong))].sort().map(dt=>({name:dt.replace("Dự án ",""),t:data.filter(d=>d.doi_tuong===dt).length,_f:dt}));
   const vhPie=dynNhomVH.map(n=>({name:getNhomLabel(n),value:data.filter(d=>d.nhom===n).length}));
@@ -627,6 +629,7 @@ const DashboardApp = function Dashboard(){
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(React.createElement(DashboardApp));
+
 
 
 
