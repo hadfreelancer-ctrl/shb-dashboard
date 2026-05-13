@@ -57,11 +57,17 @@ async function fetchSheetData() {
       SHEET_ID +
       "/gviz/tq?tqx=out:json&sheet=" +
       encodeURIComponent(SHEET_TAB);
-
+    
     const resp = await fetch(url);
-
-    const json = await resp.json();
-
+    
+    console.log("STATUS:", resp.status);
+    
+    const text = await resp.text();
+    
+    console.log("RAW RESPONSE:", text);
+    
+    const json = JSON.parse(text);
+    
     const cols = json.table.cols.map(c => c.label || c.id);
 
     const rows = json.table.rows.map(r =>
@@ -74,7 +80,8 @@ async function fetchSheetData() {
 
   } catch (err) {
 
-    console.error("Sheet Error:", err);
+    console.error("FULL SHEET ERROR:", err);
+    alert(err.message);
 
     return [];
   }
