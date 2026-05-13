@@ -57,17 +57,21 @@ async function fetchSheetData() {
       SHEET_ID +
       "/gviz/tq?tqx=out:json&sheet=" +
       encodeURIComponent(SHEET_TAB);
-    
+
     const resp = await fetch(url);
-    
+
     console.log("STATUS:", resp.status);
-    
+
     const text = await resp.text();
-    
+
     console.log("RAW RESPONSE:", text);
-    
-    const json = JSON.parse(text);
-    
+
+    const jsonText = text.match(
+      /google\.visualization\.Query\.setResponse\(([\s\S]*)\);/
+    )[1];
+
+    const json = JSON.parse(jsonText);
+
     const cols = json.table.cols.map(c => c.label || c.id);
 
     const rows = json.table.rows.map(r =>
@@ -76,6 +80,18 @@ async function fetchSheetData() {
         : []
     );
 
+    return parseSheetData([cols, ...rows]);
+
+  } catch (err) {
+
+    console.error("FULL SHEET ERROR:", err);
+
+    alert(err.message);
+
+    return [];
+  }
+}
+  
     return parseSheetData([cols, ...rows]);
 
   } catch (err) {
