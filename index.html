@@ -51,7 +51,6 @@ function parseSheetData(values) {
 
 async function fetchSheetData() {
   try {
-
     const url =
       "https://docs.google.com/spreadsheets/d/" +
       SHEET_ID +
@@ -59,23 +58,23 @@ async function fetchSheetData() {
       encodeURIComponent(SHEET_TAB);
 
     const resp = await fetch(url);
+    const text = await resp.text(); // ← đổi từ .json() sang .text()
 
-    const json = await resp.json();
+    // Strip JSONP wrapper: /*O_o*/\ngoogle.visualization.Query.setResponse({...});
+    const jsonStr = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)?.[1];
+    if (!jsonStr) throw new Error("Không parse được response từ Sheet");
+
+    const json = JSON.parse(jsonStr);
 
     const cols = json.table.cols.map(c => c.label || c.id);
-
     const rows = json.table.rows.map(r =>
-      r.c
-        ? r.c.map(cell => (cell ? cell.v || cell.f || "" : ""))
-        : []
+      r.c ? r.c.map(cell => (cell ? cell.v || cell.f || "" : "")) : []
     );
 
     return parseSheetData([cols, ...rows]);
 
   } catch (err) {
-
     console.error("Sheet Error:", err);
-
     return [];
   }
 }
