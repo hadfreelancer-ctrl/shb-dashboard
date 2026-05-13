@@ -178,7 +178,7 @@ const RAW = [
   {key:"CC-33",loai:"Van_hoa",doi_tuong:"Văn hóa Townhall",nhom:"Truyen-thong-chuyen-doi",hang_muc:"Bài đăng",hang_muc_chuan:"Bài đăng",hang_muc_con:"",assignee:"Hạnh",status:"Pending",due:"2026-05-22",updated:"2026-05-09T14:00",note:"Bài đăng truyền cảm hứng"},
 ];
 
-const TODAY="2026-05-10";
+const TODAY=new Date().toISOString().slice(0,10); // dynamic - always real today
 const NHOM_SD=["Chien-luoc-quan-ly-thay-doi","Truyen-thong-noi-bo","Truyen-thong-khach-hang","Dao-tao","Xu-ly-khang-cu","Duy-tri-Chuyen-giao"];
 const NHOM_VH=["Van-hoa-khoi","Truyen-thong-chuyen-doi","Nen-tang-phat-sinh"];
 const ASSIGNEES=["Dũng","Hạnh","Cường","Bình","Bích","LeNa","Hương","Thủy"];
