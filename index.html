@@ -32,6 +32,7 @@
 
 
 
+
 const { useState, useMemo, useRef, useEffect } = React;
 const { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell } = Recharts;
 
@@ -57,7 +58,7 @@ function getOverdueDays(dueDate){
 // ── GOOGLE SHEET CONNECTION ───────────────────────────────────────────────────
 const SHEET_ID = "1wPUTzB9WtgxRqzJFZyYsuRGuy1HuXuHZoLVYOBlDirY";
 const SHEET_TAB = "DATA_ALL";
-const CONFIG_API = "https://script.google.com/macros/s/AKfycbxUgmUnm7BnlVZLYS5B8I6uPb5WuLFhAEh6_SIGG-XyM6SIDSYJm0sjblAwSvB0TCYA/exec"; // Dán URL Apps Script Web App vào đây sau khi deploy
+const CONFIG_API = "https://script.google.com/macros/s/AKfycbwqv8fxUJuPk6cCopsvk_XDT3M6-oJ1uag1gy45YQWqionKED-sWSkgUPMMq-2Kt46mkg/exec"; // Dán URL Apps Script Web App vào đây sau khi deploy
 
 function parseGvizDate(val) {
   if(!val) return "";
@@ -222,7 +223,7 @@ function DatePicker({start,end,onApply,onClose,accent}){const[sel,setSel]=useSta
 
 function Heatmap({data,cfg,assignees}){const allN=[...NHOM_SD,...NHOM_VH],maxV=Math.max(...data.flat().map(c=>c.v),1);const ac=cfg.colors.accent;const rgb=ac.replace("#","").match(/.{2}/g).map(h=>parseInt(h,16)).join(",");return(<div style={{overflowX:"auto"}}><table style={{borderCollapse:"separate",borderSpacing:3,fontSize:10}}><thead><tr><th style={{padding:"0 8px 4px 0",minWidth:50}}/>{allN.map(n=><th key={n} style={{padding:"0 0 4px",color:"#4B5EA6",fontWeight:500,textAlign:"center",writingMode:"vertical-rl",transform:"rotate(180deg)",height:50,verticalAlign:"bottom",fontSize:9}}>{cfg.nhomLabels[n]?.split(" ")[0]}</th>)}</tr></thead><tbody>{data.map((row,ri)=><tr key={ri}><td style={{padding:"0 8px 0 0",color:"#6B7E9E",textAlign:"right",fontWeight:500,fontSize:11}}>{(assignees||[])[ri]}</td>{row.map((cell,ci)=>{const int=cell.v/maxV;return<td key={ci} title={`${(assignees||[])[ri]} × ${cfg.nhomLabels[allN[ci]]||allN[ci]}: ${cell.v}`} style={{width:28,height:22,background:cell.v===0?"rgba(255,255,255,0.02)":`rgba(${rgb},${0.08+int*.72})`,borderRadius:4,textAlign:"center",fontSize:9,color:cell.v===0?"transparent":int>.5?"#fff":ac,fontWeight:700,cursor:"default"}}>{cell.v||""}</td>})}</tr>)}</tbody></table><div style={{marginTop:6,display:"flex",alignItems:"center",gap:5,fontSize:9,color:"#3B4E6B"}}><span>0</span>{[.08,.3,.55,.75,.9].map((o,i)=><div key={i} style={{width:14,height:10,borderRadius:2,background:`rgba(${rgb},${o})`}}/>)}<span>Nhiều · Hover xem chi tiết</span></div></div>);}
 
-function SettingsPanel({cfg,onUpdate,onClose,onReset,onExport,allHMChuan=[]}){
+function SettingsPanel({cfg,onUpdate,onClose,onReset,onExport,allHMChuan=[],configSaving=false,configSaved=null}){
   const[tab,setTab]=useState("text");
   const[drag,setDrag]=useState(null);
   const[dragOver,setDragOver]=useState(null);
@@ -434,14 +435,11 @@ useEffect(()=>{try{localStorage.setItem("shb_presets",JSON.stringify(presets));}
       setConfigSaving(true);
       fetch(CONFIG_API,{
         method:"POST",
-        headers:{"Content-Type":"application/json"},
+        mode:"no-cors",
+        headers:{"Content-Type":"text/plain"},
         body:JSON.stringify({config:cfg,savedBy:"Dashboard"})
       })
-      .then(r=>r.json())
-      .then(res=>{
-        if(res.ok){setConfigSaved(new Date());}
-        setConfigSaving(false);
-      })
+      .then(()=>{setConfigSaved(new Date());setConfigSaving(false);})
       .catch(()=>setConfigSaving(false));
     },1500);
     return()=>clearTimeout(timer);
@@ -579,15 +577,19 @@ useEffect(()=>{try{localStorage.setItem("shb_presets",JSON.stringify(presets));}
   // Load config from API on mount
   useEffect(()=>{
     if(!CONFIG_API) return; // skip if no API URL
-    fetch(CONFIG_API)
-      .then(r=>r.json())
-      .then(res=>{
-        if(res.ok && res.config && Object.keys(res.config).length>0){
-          setCfg(prev=>({...DEFAULT_CONFIG,...res.config}));
-          try{localStorage.setItem("cm_cfg_v10",JSON.stringify({...DEFAULT_CONFIG,...res.config}));}catch{}
-        }
-      })
-      .catch(()=>{}); // fail silently, use localStorage fallback
+    // Use JSONP-style via script tag to bypass CORS
+  const script=document.createElement("script");
+  window.__configCallback=(data)=>{
+    if(data&&data.ok&&data.config&&Object.keys(data.config).length>0){
+      setCfg(prev=>({...DEFAULT_CONFIG,...data.config}));
+      try{localStorage.setItem("cm_cfg_v10",JSON.stringify({...DEFAULT_CONFIG,...data.config}));}catch{}
+    }
+    document.head.removeChild(script);
+    delete window.__configCallback;
+  };
+  script.src=CONFIG_API+"?callback=__configCallback";
+  script.onerror=()=>{document.head.removeChild(script);delete window.__configCallback;};
+  document.head.appendChild(script); // fail silently, use localStorage fallback
   },[]);
   // Auto-populate hmChuanLabels when data loads
   useEffect(()=>{
@@ -769,7 +771,7 @@ useEffect(()=>{try{localStorage.setItem("shb_presets",JSON.stringify(presets));}
     </div>
   </div>
 </div>}
-{showSettings&&<><div onClick={()=>setShowSettings(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:299}}/><SettingsPanel cfg={cfg} onUpdate={setCfg} allHMChuan={allHangMucChuan} onClose={()=>setShowSettings(false)} onReset={()=>{setCfg(DEFAULT_CONFIG);try{localStorage.removeItem("cm_cfg_v10");}catch{}}} onExport={()=>{const b=new Blob([JSON.stringify(cfg,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="dashboard_config.json";a.click();}}/></>}
+{showSettings&&<><div onClick={()=>setShowSettings(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:299}}/><SettingsPanel cfg={cfg} onUpdate={setCfg} allHMChuan={allHangMucChuan} configSaving={configSaving} configSaved={configSaved} onClose={()=>setShowSettings(false)} onReset={()=>{setCfg(DEFAULT_CONFIG);try{localStorage.removeItem("cm_cfg_v10");}catch{}}} onExport={()=>{const b=new Blob([JSON.stringify(cfg,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="dashboard_config.json";a.click();}}/></>}
     </div>
   );
 }
@@ -778,6 +780,7 @@ useEffect(()=>{try{localStorage.setItem("shb_presets",JSON.stringify(presets));}
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(React.createElement(DashboardApp));
+
 
 
 
