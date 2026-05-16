@@ -31,6 +31,7 @@
 
 
 
+
 const { useState, useMemo, useRef, useEffect } = React;
 const { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell } = Recharts;
 
@@ -56,6 +57,7 @@ function getOverdueDays(dueDate){
 // ── GOOGLE SHEET CONNECTION ───────────────────────────────────────────────────
 const SHEET_ID = "1wPUTzB9WtgxRqzJFZyYsuRGuy1HuXuHZoLVYOBlDirY";
 const SHEET_TAB = "DATA_ALL";
+const CONFIG_API = "https://script.google.com/macros/s/AKfycbxUgmUnm7BnlVZLYS5B8I6uPb5WuLFhAEh6_SIGG-XyM6SIDSYJm0sjblAwSvB0TCYA/exec"; // Dán URL Apps Script Web App vào đây sau khi deploy
 
 function parseGvizDate(val) {
   if(!val) return "";
@@ -230,11 +232,30 @@ function SettingsPanel({cfg,onUpdate,onClose,onReset,onExport,allHMChuan=[]}){
   const inp={background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:7,padding:"6px 10px",color:"#E8EAF0",fontSize:12,width:"100%",outline:"none"};
   const lbl={fontSize:10,color:"#4B5EA6",fontWeight:600,textTransform:"uppercase",letterSpacing:"0.6px",marginBottom:4,display:"block"};
   const TABS=[{k:"text",icon:"T",l:"Text"},{k:"colors",icon:"C",l:"Màu"},{k:"sections",icon:"S",l:"Sections"},{k:"status",icon:"St",l:"Status"},{k:"nhom",icon:"N",l:"Nhóm"},{k:"hmchuan",icon:"HM",l:"HM"}];
-  return(<div style={{position:"fixed",top:0,right:0,bottom:0,width:360,background:"#0C1525",borderLeft:"1px solid rgba(255,255,255,0.08)",zIndex:300,display:"flex",flexDirection:"column",boxShadow:"-20px 0 60px rgba(0,0,0,.5)"}}><div style={{padding:"14px 18px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}><div><div style={{fontWeight:700,fontSize:14,color:"#E8EAF0"}}>&#9881; Tuỳ chỉnh Dashboard</div><div style={{fontSize:10,color:"#3B4E6B",marginTop:2}}>Thay đổi áp dụng ngay lập tức</div></div><div style={{display:"flex",gap:6}}><button onClick={onReset} style={{padding:"5px 10px",background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:7,color:"#EF4444",fontSize:11,cursor:"pointer"}}>&#8634; Reset</button><button onClick={onExport} style={{padding:"5px 10px",background:"rgba(0,201,167,0.1)",border:"1px solid rgba(0,201,167,0.2)",borderRadius:7,color:"#00C9A7",fontSize:11,cursor:"pointer"}}>&#8595; JSON</button><button onClick={onClose} style={{padding:"5px 10px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:7,color:"#8899BB",fontSize:11,cursor:"pointer"}}>&#10005;</button></div></div>
+  return(<div style={{position:"fixed",top:0,right:0,bottom:0,width:360,background:"#0C1525",borderLeft:"1px solid rgba(255,255,255,0.08)",zIndex:300,display:"flex",flexDirection:"column",boxShadow:"-20px 0 60px rgba(0,0,0,.5)"}}><div style={{padding:"14px 18px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}><div><div style={{fontWeight:700,fontSize:14,color:"#E8EAF0"}}>&#9881; Tuỳ chỉnh Dashboard</div><div style={{display:"flex",alignItems:"center",gap:6,marginTop:2}}>
+    <div style={{fontSize:10,color:"#3B4E6B"}}>Thay đổi áp dụng ngay lập tức</div>
+    {CONFIG_API&&<div style={{display:"flex",alignItems:"center",gap:4}}>
+      {configSaving?<span style={{fontSize:9,color:"#F59E0B"}}>&#8635; Đang lưu...</span>
+      :configSaved?<span style={{fontSize:9,color:"#00C9A7"}}>&#10003; Đã lưu {configSaved.toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"})}</span>
+      :<span style={{fontSize:9,color:"#3B4E6B"}}>Chưa đồng bộ</span>}
+    </div>}
+    {!CONFIG_API&&<span style={{fontSize:9,color:"#F59E0B"}}>&#9888; Chưa cấu hình API</span>}
+  </div></div><div style={{display:"flex",gap:6}}><button onClick={onReset} style={{padding:"5px 10px",background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:7,color:"#EF4444",fontSize:11,cursor:"pointer"}}>&#8634; Reset</button><button onClick={onExport} style={{padding:"5px 10px",background:"rgba(0,201,167,0.1)",border:"1px solid rgba(0,201,167,0.2)",borderRadius:7,color:"#00C9A7",fontSize:11,cursor:"pointer"}}>&#8595; JSON</button><button onClick={onClose} style={{padding:"5px 10px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:7,color:"#8899BB",fontSize:11,cursor:"pointer"}}>&#10005;</button></div></div>
   <div style={{display:"flex",borderBottom:"1px solid rgba(255,255,255,0.06)",flexShrink:0}}>{TABS.map(t=><button key={t.k} onClick={()=>setTab(t.k)} style={{flex:1,padding:"9px 0",background:"transparent",border:"none",borderBottom:tab===t.k?"2px solid #F47920":"2px solid transparent",cursor:"pointer",fontSize:10,color:tab===t.k?"#F47920":"#5B6E8C",fontWeight:tab===t.k?600:400,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}><span style={{fontSize:13}}>{t.icon}</span>{t.l}</button>)}</div>
   <div style={{flex:1,overflowY:"auto",padding:"14px 18px"}}>
     {tab==="text"&&<div>
       <div style={{fontSize:11,color:"#3B4E6B",background:"rgba(123,158,255,0.06)",border:"1px solid rgba(123,158,255,0.1)",borderRadius:8,padding:"8px 12px",marginBottom:14}}>&#8505; Thay đổi tên hiển thị, không ảnh hưởng logic</div>
+    <div style={{marginBottom:16,padding:"12px 14px",background:CONFIG_API?"rgba(0,201,167,0.06)":"rgba(245,158,11,0.06)",border:CONFIG_API?"1px solid rgba(0,201,167,0.15)":"1px solid rgba(245,158,11,0.15)",borderRadius:10}}>
+      <div style={{fontSize:11,fontWeight:700,color:CONFIG_API?"#00C9A7":"#F59E0B",marginBottom:8}}>{CONFIG_API?"&#10003; Đồng bộ đám mây đang bật":"&#9888; Chưa cấu hình đồng bộ đám mây"}</div>
+      <div style={{fontSize:10,color:"#4B5EA6",marginBottom:8}}>Dán URL Apps Script Web App để lưu settings cho tất cả mọi người</div>
+      <input 
+        value={CONFIG_API} 
+        readOnly 
+        placeholder="https://script.google.com/macros/s/.../exec"
+        style={{width:"100%",padding:"6px 10px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:7,color:CONFIG_API?"#00C9A7":"#3B4E6B",fontSize:10,outline:"none"}}
+      />
+      {!CONFIG_API&&<div style={{fontSize:10,color:"#3B4E6B",marginTop:6}}>Xem file <b style={{color:"#7B9EFF"}}>ConfigAPI.gs</b> để biết cách deploy</div>}
+    </div>
       {[["Thương hiệu",[["appName","Tên báo cáo"],["appSub","Tiêu đề phụ"],["liveBadge","Live badge"],["pdfButton","Nút PDF"]]],["KPI",Object.entries(cfg.kpiLabels).map(([k])=>[`kpiLabels.${k}`,k])],["Bộ lọc",Object.entries(cfg.ui.filterLabels).map(([k])=>[`ui.filterLabels.${k}`,k])],["Loại task",Object.entries(cfg.ui.loaiNames).map(([k])=>[`ui.loaiNames.${k}`,k])],["Chỉ số",[["ui.vsPrev","vs kỳ trước"],["ui.avgPer","tasks/người"],["ui.overdueLabel","Trễ hạn"],["ui.completionLabel","Tỉ lệ HT"],["ui.avgTeamLabel","AVG Team"],["ui.topPerformerLabel","Top Performer"],["ui.needSupportLabel","Cần hỗ trợ"],["ui.completionRateLabel","Completion Rate"],["ui.overdueTag","Badge TRỄ"],["ui.warningTag","Badge ⚠"]]],["Cột bảng",Object.entries(cfg.tableColumns).map(([k,v])=>[`tableColumns.${k}`,v])]].map(([group,fields])=><div key={group}><div style={{fontSize:11,fontWeight:700,color:"#7B9EFF",textTransform:"uppercase",letterSpacing:"0.8px",margin:"12px 0 8px"}}>{group}</div>{fields.map(([path,label])=>{const keys=path.split(".");let val=cfg;for(const k of keys)val=val?.[k];return(<div key={path} style={{marginBottom:10}}><label style={lbl}>{label}</label><input style={inp} value={val||""} onChange={e=>upd(path,e.target.value)}/></div>);})}
       </div>)}
     <div style={{marginTop:16,paddingTop:12,borderTop:"1px solid rgba(255,255,255,0.06)"}}><div style={{fontSize:11,fontWeight:700,color:"#7B9EFF",textTransform:"uppercase",letterSpacing:"0.8px",marginBottom:8}}>Logo</div><div style={{display:"flex",gap:8,alignItems:"center"}}><div style={{width:48,height:48,borderRadius:8,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden"}}>{cfg.logoUrl?<img src={cfg.logoUrl} style={{width:"100%",height:"100%",objectFit:"contain"}}/>:<span style={{fontSize:20}}>&#128247;</span>}</div><div style={{display:"flex",flexDirection:"column",gap:6}}><button onClick={()=>{const inp=document.createElement("input");inp.type="file";inp.accept="image/*";inp.onchange=e=>{const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=ev=>upd("logoUrl",ev.target.result);reader.readAsDataURL(file);};inp.click();}} style={{padding:"6px 14px",background:"rgba(244,121,32,0.1)",border:"1px solid rgba(244,121,32,0.3)",borderRadius:7,color:"#F47920",fontSize:11,cursor:"pointer"}}>&#128228; Tải ảnh lên</button>{cfg.logoUrl&&<button onClick={()=>upd("logoUrl","")} style={{padding:"6px 14px",background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:7,color:"#EF4444",fontSize:11,cursor:"pointer"}}>&#10005; Xoá logo</button>}</div></div></div>
@@ -371,6 +392,8 @@ function exportToExcel(rows,filename){
 
 const DashboardApp = function Dashboard(){
   const[cfg,setCfg]=useState(()=>{try{const s=localStorage.getItem("cm_cfg_v10");return s?JSON.parse(s):DEFAULT_CONFIG;}catch{return DEFAULT_CONFIG;}});
+  const[configSaving,setConfigSaving]=useState(false);
+  const[configSaved,setConfigSaved]=useState(null); // timestamp last saved
   const[f,setF]=useState({loai:[],doi_tuong:[],nhom:[],assignee:[],statusGroup:[],hang_muc:[],hang_muc_chuan:[],work_type:["Task"]});
   const[search,setSearch]=useState("");const[page,setPage]=useState(1);
   const[sidebarOpen,setSidebarOpen]=useState(typeof window!=="undefined"?window.innerWidth>1024:true);
@@ -402,7 +425,27 @@ const DashboardApp = function Dashboard(){
   const C=cfg.colors;const SG=cfg.statusGroups;
 
 useEffect(()=>{try{localStorage.setItem("shb_presets",JSON.stringify(presets));}catch{};},[presets]);
-  useEffect(()=>{try{localStorage.setItem("cm_cfg_v10",JSON.stringify(cfg));}catch{};},[cfg]);
+  useEffect(()=>{
+    // Always save to localStorage
+    try{localStorage.setItem("cm_cfg_v10",JSON.stringify(cfg));}catch{}
+    // Save to API if configured (debounced 1.5s)
+    if(!CONFIG_API) return;
+    const timer=setTimeout(()=>{
+      setConfigSaving(true);
+      fetch(CONFIG_API,{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({config:cfg,savedBy:"Dashboard"})
+      })
+      .then(r=>r.json())
+      .then(res=>{
+        if(res.ok){setConfigSaved(new Date());}
+        setConfigSaving(false);
+      })
+      .catch(()=>setConfigSaving(false));
+    },1500);
+    return()=>clearTimeout(timer);
+  },[cfg]);
   
   // Fetch sheet data on mount + auto-refresh every 5 min
   const doFetch = async()=>{
@@ -533,6 +576,19 @@ useEffect(()=>{try{localStorage.setItem("shb_presets",JSON.stringify(presets));}
   const allHangMuc=[...new Set(ACTIVE_DATA.map(d=>d.hang_muc))].sort();
   const allWorkTypes=[...new Set(ACTIVE_DATA.map(d=>d.work_type).filter(Boolean))].sort();
   const allHangMucChuan=[...new Set(ACTIVE_DATA.filter(d=>d.hang_muc_chuan).map(d=>d.hang_muc_chuan))].sort();
+  // Load config from API on mount
+  useEffect(()=>{
+    if(!CONFIG_API) return; // skip if no API URL
+    fetch(CONFIG_API)
+      .then(r=>r.json())
+      .then(res=>{
+        if(res.ok && res.config && Object.keys(res.config).length>0){
+          setCfg(prev=>({...DEFAULT_CONFIG,...res.config}));
+          try{localStorage.setItem("cm_cfg_v10",JSON.stringify({...DEFAULT_CONFIG,...res.config}));}catch{}
+        }
+      })
+      .catch(()=>{}); // fail silently, use localStorage fallback
+  },[]);
   // Auto-populate hmChuanLabels when data loads
   useEffect(()=>{
     if(allHangMucChuan.length>0){
@@ -722,6 +778,7 @@ useEffect(()=>{try{localStorage.setItem("shb_presets",JSON.stringify(presets));}
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(React.createElement(DashboardApp));
+
 
 
 
