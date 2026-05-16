@@ -34,6 +34,7 @@
 
 
 
+
 const { useState, useMemo, useRef, useEffect } = React;
 const { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell } = Recharts;
 
@@ -61,7 +62,7 @@ const SHEET_ID = "1wPUTzB9WtgxRqzJFZyYsuRGuy1HuXuHZoLVYOBlDirY";
 const SHEET_TAB = "DATA_ALL";
 // ── GitHub Config Storage ─────────────────────────────────────────────────
 const GITHUB_REPO  = "hadfreelancer-ctrl/shb-dashboard";
-const GITHUB_TOKEN = "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"; // Dán GitHub Personal Access Token vào đây
+const GITHUB_TOKEN = "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"; // Dán GitHub Personal Access Token vào đây
 const CONFIG_FILE  = "config.json"; // Tên file config trong repo
 
 function parseGvizDate(val) {
@@ -239,7 +240,7 @@ function SettingsPanel({cfg,onUpdate,onClose,onReset,onExport,allHMChuan=[],conf
   const TABS=[{k:"text",icon:"T",l:"Text"},{k:"colors",icon:"C",l:"Màu"},{k:"sections",icon:"S",l:"Sections"},{k:"status",icon:"St",l:"Status"},{k:"nhom",icon:"N",l:"Nhóm"},{k:"hmchuan",icon:"HM",l:"HM"}];
   return(<div style={{position:"fixed",top:0,right:0,bottom:0,width:360,background:"#0C1525",borderLeft:"1px solid rgba(255,255,255,0.08)",zIndex:300,display:"flex",flexDirection:"column",boxShadow:"-20px 0 60px rgba(0,0,0,.5)"}}><div style={{padding:"14px 18px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}><div><div style={{fontWeight:700,fontSize:14,color:"#E8EAF0"}}>&#9881; Tuỳ chỉnh Dashboard</div><div style={{display:"flex",alignItems:"center",gap:6,marginTop:2}}>
     <div style={{fontSize:10,color:"#3B4E6B"}}>Thay đổi áp dụng ngay lập tức</div>
-    {CONFIG_API&&<div style={{display:"flex",alignItems:"center",gap:4}}>
+    {GITHUB_TOKEN&&<div style={{display:"flex",alignItems:"center",gap:4}}>
       {configSaving?<span style={{fontSize:9,color:"#F59E0B"}}>&#8635; Đang lưu...</span>
       :configSaved?<span style={{fontSize:9,color:"#00C9A7"}}>&#10003; Đã lưu {configSaved.toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"})}</span>
       :<span style={{fontSize:9,color:"#3B4E6B"}}>Chưa đồng bộ</span>}
@@ -254,10 +255,10 @@ function SettingsPanel({cfg,onUpdate,onClose,onReset,onExport,allHMChuan=[],conf
       <div style={{fontSize:11,fontWeight:700,color:GITHUB_TOKEN?"#00C9A7":"#F59E0B",marginBottom:8}}>{GITHUB_TOKEN?"&#10003; Đồng bộ GitHub đang bật":"&#9888; Chưa cấu hình GitHub Token"}</div>
       <div style={{fontSize:10,color:"#4B5EA6",marginBottom:8}}>Dán URL Apps Script Web App để lưu settings cho tất cả mọi người</div>
       <input 
-        value={CONFIG_API} 
+        value={GITHUB_TOKEN?"ghp_***...***":"Chưa cấu hình"} 
         readOnly 
         placeholder="https://script.google.com/macros/s/.../exec"
-        style={{width:"100%",padding:"6px 10px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:7,color:CONFIG_API?"#00C9A7":"#3B4E6B",fontSize:10,outline:"none"}}
+        style={{width:"100%",padding:"6px 10px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:7,color:GITHUB_TOKEN?"#00C9A7":"#3B4E6B",fontSize:10,outline:"none"}}
       />
       {!GITHUB_TOKEN&&<div style={{fontSize:10,color:"#3B4E6B",marginTop:6}}>Thêm <b style={{color:"#7B9EFF"}}>GITHUB_TOKEN</b> vào file index.html để bật đồng bộ</div>}
     </div>
@@ -598,7 +599,7 @@ useEffect(()=>{try{localStorage.setItem("shb_presets",JSON.stringify(presets));}
   const allHangMucChuan=[...new Set(ACTIVE_DATA.filter(d=>d.hang_muc_chuan).map(d=>d.hang_muc_chuan))].sort();
   // Load config from API on mount
   useEffect(()=>{
-    if(!CONFIG_API) return; // skip if no API URL
+    if(!GITHUB_TOKEN) return; // skip if no API URL
     if(!GITHUB_TOKEN) return;
     // Load config.json từ GitHub raw (không cần auth để đọc repo public)
     fetch("https://raw.githubusercontent.com/"+GITHUB_REPO+"/main/"+CONFIG_FILE+"?t="+Date.now())
@@ -800,6 +801,7 @@ useEffect(()=>{try{localStorage.setItem("shb_presets",JSON.stringify(presets));}
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(React.createElement(DashboardApp));
+
 
 
 
