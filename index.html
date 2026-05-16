@@ -29,8 +29,22 @@
 
 
 
+
 const { useState, useMemo, useRef, useEffect } = React;
 const { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell } = Recharts;
+
+function getOverdueColor(dueDate,status,closedStatuses){
+  if(!dueDate||(closedStatuses||[]).some(st=>st.toLowerCase()===(status||"").toLowerCase()))return null;
+  const diff=Math.floor((new Date(TODAY)-new Date(dueDate))/86400000);
+  if(diff<=0)return null;
+  if(diff<=3)return"#F59E0B";
+  if(diff<=7)return"#F97316";
+  return"#EF4444";
+}
+function getOverdueDays(dueDate){
+  return Math.floor((new Date(TODAY)-new Date(dueDate))/86400000);
+}
+
 
 
 
@@ -707,6 +721,7 @@ useEffect(()=>{try{localStorage.setItem("shb_presets",JSON.stringify(presets));}
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(React.createElement(DashboardApp));
+
 
 
 
