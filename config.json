@@ -1,0 +1,178 @@
+{
+  "appName": "Change Management",
+  "appSub": "Báo cáo công việc Quản lý Thay Đổi",
+  "logoUrl": "",
+  "liveBadge": "Live",
+  "pdfButton": "↑ Xuất PDF",
+  "sections": {
+    "kpi": {
+      "title": "Tổng quan",
+      "visible": true,
+      "order": 0
+    },
+    "status": {
+      "title": "Trạng thái",
+      "visible": true,
+      "order": 1
+    },
+    "nhom": {
+      "title": "Nhóm công việc",
+      "visible": true,
+      "order": 2
+    },
+    "workload": {
+      "title": "Workload & Hiệu suất",
+      "visible": true,
+      "order": 3
+    },
+    "doituong": {
+      "title": "Phân tích theo Đối tượng",
+      "visible": true,
+      "order": 4
+    },
+    "trend": {
+      "title": "Xu hướng theo thời gian",
+      "visible": true,
+      "order": 5
+    },
+    "hangmuc": {
+      "title": "Hạng mục",
+      "visible": true,
+      "order": 6
+    },
+    "taskDetail": {
+      "title": "Chi tiết Task được chọn",
+      "visible": true,
+      "order": 7
+    },
+    "table": {
+      "title": "Danh sách Task",
+      "visible": true,
+      "order": 8
+    }
+  },
+  "kpiLabels": {
+    "total": "Tổng hoạt độn",
+    "squad": "Squad",
+    "duan": "Dự án",
+    "vanhoa": "Văn hóa"
+  },
+  "statusGroups": [
+    {
+      "id": "closed",
+      "label": "Hoàn thành",
+      "color": "#00C9A7",
+      "icon": "✓",
+      "jiraStatuses": [
+        "CLOSED",
+        "Closed",
+        "Done"
+      ]
+    },
+    {
+      "id": "inprogress",
+      "label": "Đang xử lý",
+      "color": "#5B8DEF",
+      "icon": "↻",
+      "jiraStatuses": [
+        "IN PROGRESS",
+        "In Progress",
+        "RESOLVE",
+        "Resolve"
+      ]
+    },
+    {
+      "id": "open",
+      "label": "Chưa xử lý",
+      "color": "#7A8AA8",
+      "icon": "○",
+      "jiraStatuses": [
+        "OPEN",
+        "Open",
+        "Backlog"
+      ]
+    },
+    {
+      "id": "pending",
+      "label": "Tạm hoãn & Huỷ",
+      "color": "#9B7FB8",
+      "icon": "⏸",
+      "jiraStatuses": [
+        "PENDING",
+        "Pending",
+        "CANCELLED",
+        "Cancelled"
+      ]
+    }
+  ],
+  "tableColumns": {
+    "key": "Mã Task",
+    "doi_tuong": "Đối tượng",
+    "loai": "Loại",
+    "nhom": "Nhóm",
+    "hang_muc": "Hạng mục",
+    "hang_muc_chuan": "Hạng mục chuẩn",
+    "assignee": "Người thực hiện",
+    "status": "Trạng thái",
+    "due_date": "Deadline",
+    "updated": "Cập nhật",
+    "note": "Ghi chú"
+  },
+  "colors": {
+    "accent": "#F47920",
+    "squad": "#5B8DEF",
+    "duan": "#9AA5BD",
+    "vanhoa": "#7A8AA8",
+    "danger": "#EF4444",
+    "success": "#00C9A7",
+    "surface": "#0F1828",
+    "surfaceHi": "#142036"
+  },
+  "hmChuanLabels": {
+    "Kế-hoạch-quản-lý-thay-đổi": "Kế-hoạch-quản-lý-thay-đổi",
+    "Quản lý hiệu quả công việc team CM": "Quản lý hiệu quả công việc team CM",
+    "Tổ chức sự kiện": "Tổ chức sự kiện",
+    "Xử-lý-kháng-cự": "Xử-lý-kháng-cự"
+  },
+  "nhomLabels": {
+    "Kế-hoạch-quản-lý-thay-đổi": "KH QLTĐ",
+    "Truyền-thông": "Truyền thông",
+    "Đào-tạo": "Đào tạo",
+    "Xử-lý-kháng-cự": "Xử lý KC",
+    "Duy-trì/Chuyển-giao (Reinforcement)": "Duy trì/CG",
+    "Văn-hóa-khối": "Văn hóa khối",
+    "Truyền-thông-chuyển-đổi": "TT Chuyển đổi",
+    "Nền-tảng/phát-sinh": "Nền tảng PS"
+  },
+  "ui": {
+    "clearFilter": "Xóa bộ lọc",
+    "searchPlaceholder": "🔍 Tìm kiếm...",
+    "filterLabels": {
+      "loai": "Loại",
+      "status": "Trạng thái",
+      "doituong": "Đối tượng",
+      "nhom": "Nhóm công việc",
+      "assignee": "Người thực hiện",
+      "hangmuc": "Hạng mục",
+      "hmchuan": "Hạng mục chuẩn"
+    },
+    "loaiNames": {
+      "Squad": "Squad",
+      "Du_an": "Dự án",
+      "Van_hoa": "Văn hóa"
+    },
+    "vsPrev": "vs kỳ trước",
+    "avgPer": "tasks/người",
+    "overdueLabel": "Trễ hạn",
+    "completionLabel": "Tỉ lệ hoàn thành",
+    "avgTeamLabel": "Trung bình đội",
+    "topPerformerLabel": "Xuất sắc nhất",
+    "needSupportLabel": "Cần hỗ trợ",
+    "overdueTasksLabel": "task trễ hạn",
+    "completionRateLabel": "Tỉ lệ hoàn thành",
+    "trendNote": "Dữ liệu thời gian thực · Tự động theo khoảng đã chọn",
+    "heatmapNote": "Màu đậm = nhiều task · Hover để xem chi tiết",
+    "overdueTag": "TRỄ",
+    "warningTag": "⚠"
+  }
+}
