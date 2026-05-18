@@ -183,5 +183,15 @@
     "heatmapNote": "Màu đậm = nhiều task · Hover để xem chi tiết",
     "overdueTag": "TRỄ",
     "warningTag": "⚠"
+  },
+  "chartLabels": {
+    "nhomSquadDuan": "Squad + Dự án",
+    "nhomVanhoa": "Văn hóa",
+    "doituongSquad": "Squad",
+    "doituongDuan": "Dự án",
+    "hangmucGoc": "Hạng mục gốc",
+    "hangmucCon": "Hạng mục con",
+    "hangmucGocNote": "Tên task từ Jira",
+    "hangmucConNote": "Top subtask phổ biến"
   }
 }
