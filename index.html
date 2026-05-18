@@ -240,7 +240,7 @@ function SettingsPanel({cfg,onUpdate,onClose,onReset,onExport,allHMChuan=[],conf
   const handleDrop=tk=>{if(!drag||drag===tk){setDrag(null);setDragOver(null);return;}onUpdate(prev=>{const next=JSON.parse(JSON.stringify(prev));const fO=next.sections[drag].order,tO=next.sections[tk].order;Object.keys(next.sections).forEach(k=>{if(fO<tO){if(next.sections[k].order>fO&&next.sections[k].order<=tO)next.sections[k].order--;}else{if(next.sections[k].order>=tO&&next.sections[k].order<fO)next.sections[k].order++;}});next.sections[drag].order=tO;return next;});setDrag(null);setDragOver(null);};
   const inp={background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:7,padding:"6px 10px",color:"#E8EAF0",fontSize:12,width:"100%",outline:"none"};
   const lbl={fontSize:10,color:"#4B5EA6",fontWeight:600,textTransform:"uppercase",letterSpacing:"0.6px",marginBottom:4,display:"block"};
-  const TABS=[{k:"text",icon:"T",l:"Text"},{k:"colors",icon:"C",l:"Màu"},{k:"sections",icon:"S",l:"Sections"},{k:"status",icon:"St",l:"Status"},{k:"nhom",icon:"N",l:"Nhóm"},{k:"hmchuan",icon:"HM",l:"HM"}];
+  const TABS=[{k:"text",icon:"T",l:"Text"},{k:"colors",icon:"C",l:"Màu"},{k:"sections",icon:"S",l:"Sections"},{k:"status",icon:"St",l:"Status"},{k:"nhom",icon:"N",l:"Nhóm"},{k:"hmchuan",icon:"HM",l:"HM"},{k:"kpi",icon:"📊",l:"KPI"},{k:"cols",icon:"📋",l:"Cột"}];
   return(<div style={{position:"fixed",top:0,right:0,bottom:0,width:360,background:"#0C1525",borderLeft:"1px solid rgba(255,255,255,0.08)",zIndex:300,display:"flex",flexDirection:"column",boxShadow:"-20px 0 60px rgba(0,0,0,.5)"}}><div style={{padding:"14px 18px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}><div><div style={{fontWeight:700,fontSize:14,color:"#E8EAF0"}}>&#9881; Tuỳ chỉnh Dashboard</div><div style={{display:"flex",alignItems:"center",gap:6,marginTop:2}}>
     <div style={{fontSize:10,color:"#3B4E6B"}}>Thay đổi áp dụng ngay lập tức</div>
     {CONFIG_API_URL&&<div style={{display:"flex",alignItems:"center",gap:4}}>
@@ -291,6 +291,45 @@ function SettingsPanel({cfg,onUpdate,onClose,onReset,onExport,allHMChuan=[],conf
     {tab==="hmchuan"&&<div>
       <div style={{fontSize:11,color:"#3B4E6B",background:"rgba(123,158,255,0.06)",border:"1px solid rgba(123,158,255,0.1)",borderRadius:8,padding:"8px 12px",marginBottom:14}}>&#128203; Đổi tên hiển thị Hạng mục chuẩn trên chart và bộ lọc</div>
       {allHMChuan.length===0?<div style={{textAlign:"center",padding:20,color:"#3B4E6B",fontSize:12}}>Chưa có dữ liệu Hạng mục chuẩn</div>:allHMChuan.map(k=>{const v=cfg.hmChuanLabels?.[k]||k;return(<div key={k} style={{marginBottom:10}}><label style={{...lbl,fontSize:9,color:"#4B5EA6"}}>{k}</label><input style={inp} value={v} onChange={e=>upd(`hmChuanLabels.${k}`,e.target.value)}/></div>);})}
+    </div>}
+    {tab==="kpi"&&<div>
+      <div style={{fontSize:11,color:"#3B4E6B",background:"rgba(123,158,255,0.06)",border:"1px solid rgba(123,158,255,0.1)",borderRadius:8,padding:"8px 12px",marginBottom:14}}>&#128202; Đổi tên hiển thị các thẻ KPI và nhãn Loại</div>
+      <div style={{marginBottom:16}}>
+        <div style={{fontSize:10,fontWeight:700,color:"#7B9EFF",marginBottom:8,textTransform:"uppercase",letterSpacing:"0.5px"}}>Thẻ KPI tổng quan</div>
+        {[["total","Tổng hoạt động"],["squad","Squad"],["duan","Dự án"],["vanhoa","Văn hóa"]].map(([k,placeholder])=>(
+          <div key={k} style={{marginBottom:10}}>
+            <label style={{...lbl,fontSize:9,color:"#4B5EA6"}}>{placeholder}</label>
+            <input style={inp} value={cfg.kpiLabels?.[k]||placeholder} onChange={e=>upd(`kpiLabels.${k}`,e.target.value)} placeholder={placeholder}/>
+          </div>
+        ))}
+      </div>
+      <div style={{marginBottom:16}}>
+        <div style={{fontSize:10,fontWeight:700,color:"#7B9EFF",marginBottom:8,textTransform:"uppercase",letterSpacing:"0.5px"}}>Thẻ trạng thái</div>
+        {(cfg.statusGroups||[]).map((sg,i)=>(
+          <div key={sg.id} style={{marginBottom:10}}>
+            <label style={{...lbl,fontSize:9,color:"#4B5EA6"}}>{sg.id}</label>
+            <input style={inp} value={sg.label} onChange={e=>{const g=[...(cfg.statusGroups||[])];g[i]={...g[i],label:e.target.value};upd("statusGroups",g);}} placeholder={sg.label}/>
+          </div>
+        ))}
+      </div>
+      <div>
+        <div style={{fontSize:10,fontWeight:700,color:"#7B9EFF",marginBottom:8,textTransform:"uppercase",letterSpacing:"0.5px"}}>Nhãn Loại (Loại công việc)</div>
+        {[["Squad","Squad"],["Du_an","Dự án"],["Van_hoa","Văn hóa"]].map(([k,placeholder])=>(
+          <div key={k} style={{marginBottom:10}}>
+            <label style={{...lbl,fontSize:9,color:"#4B5EA6"}}>{placeholder}</label>
+            <input style={inp} value={cfg.ui?.loaiNames?.[k]||placeholder} onChange={e=>upd(`ui.loaiNames.${k}`,e.target.value)} placeholder={placeholder}/>
+          </div>
+        ))}
+      </div>
+    </div>}
+    {tab==="cols"&&<div>
+      <div style={{fontSize:11,color:"#3B4E6B",background:"rgba(123,158,255,0.06)",border:"1px solid rgba(123,158,255,0.1)",borderRadius:8,padding:"8px 12px",marginBottom:14}}>&#128203; Đổi tên cột trong bảng danh sách Task</div>
+      {[["key","Mã Task"],["doi_tuong","Đối tượng"],["loai","Loại"],["nhom","Nhóm"],["hang_muc","Hạng mục"],["hang_muc_chuan","Hạng mục chuẩn"],["assignee","Người thực hiện"],["status","Trạng thái"],["due_date","Deadline"],["updated","Cập nhật"],["note","Ghi chú"]].map(([k,placeholder])=>(
+        <div key={k} style={{marginBottom:10}}>
+          <label style={{...lbl,fontSize:9,color:"#4B5EA6"}}>{placeholder}</label>
+          <input style={inp} value={cfg.tableColumns?.[k]||placeholder} onChange={e=>upd(`tableColumns.${k}`,e.target.value)} placeholder={placeholder}/>
+        </div>
+      ))}
     </div>}
   </div></div>);
 }
