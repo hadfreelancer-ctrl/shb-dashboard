@@ -145,7 +145,7 @@
     "filterLabels": {
       "loai": "Loại",
       "status": "Trạng thái",
-      "doituong": "Đối tượng",
+      "doituong": "Epic",
       "nhom": "Nhóm công việc",
       "assignee": "Người thực hiện",
       "hangmuc": "Hạng mục",
