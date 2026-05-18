@@ -110,7 +110,7 @@
     "doi_tuong": "Epic",
     "loai": "Loại",
     "nhom": "Nhóm",
-    "hang_muc": "Hạng mục",
+    "hang_muc": "Task",
     "hang_muc_chuan": "Hạng mục chuẩn",
     "assignee": "Người thực hiện",
     "status": "Trạng thái",
@@ -149,7 +149,7 @@
       "nhom": "Nhóm công việc",
       "assignee": "Người thực hiện",
       "hangmuc": "Task",
-      "hmchuan": "Hạng mục chuẩn",
+      "hmchuan": "Task chuẩn",
       "worktype": "Loại công việc"
     },
     "loaiNames": {
