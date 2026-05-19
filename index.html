@@ -499,13 +499,14 @@ const DashboardApp = function Dashboard(){
   const[sidebarOpen,setSidebarOpen]=useState(typeof window!=="undefined"?window.innerWidth>1024:true);
   const[showSettings,setShowSettings]=useState(false);
   const[showPicker,setShowPicker]=useState(false);
-  const[dateRange,setDateRange]=useState({start:fmt(new Date(new Date(TODAY).getTime()-180*864e5)),end:TODAY});
+  const[dateRange,setDateRange]=useState({start:TODAY.slice(0,4)+"-01-01",end:TODAY.slice(0,4)+"-12-31"});
   const[dateField,setDateField]=useState("due");
   const handleDateFieldChange=React.useCallback(val=>{
     setDateField(val);
     setPage(1);
     if(val==="due"){
-      setDateRange({start:fmt(new Date(new Date(TODAY).getTime()-30*864e5)),end:fmt(new Date(new Date(TODAY).getTime()+180*864e5))});
+      const y=TODAY.slice(0,4);
+      setDateRange({start:y+"-01-01",end:y+"-12-31"});
     } else {
       setDateRange({start:fmt(new Date(new Date(TODAY).getTime()-180*864e5)),end:TODAY});
     }
