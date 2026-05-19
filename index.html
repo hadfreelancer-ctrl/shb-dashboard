@@ -487,6 +487,7 @@ const DashboardApp = function Dashboard(){
   const[showSettings,setShowSettings]=useState(false);
   const[showPicker,setShowPicker]=useState(false);
   const[dateRange,setDateRange]=useState({start:fmt(new Date(new Date(TODAY).getTime()-180*864e5)),end:TODAY});
+  const[dateField,setDateField]=useState("due");
   const[wlSort,setWlSort]=useState("load");
   const[trendMode,setTrendMode]=useState("filter");
   const[trendDimOverride,setTrendDimOverride]=useState(null);
@@ -575,7 +576,7 @@ useEffect(()=>{try{localStorage.setItem("shb_presets",JSON.stringify(presets));}
   const prevEnd=new Date(startDate.getTime()-864e5),prevStart=new Date(prevEnd.getTime()-(days-1)*864e5);
   const prevLabel=`${fmtD(prevStart)}–${fmtD(prevEnd)}`;
   const inRange=d=>{
-    const dt=d.updated||d.ngay_tao||"";
+    const dt=dateField==="due"?d.due:dateField==="created"?(d.created||""):d.updated;
     if(!dt) return true; // include if no date
     return dt>=dateRange.start&&dt<=dateRange.end+"T23:59:59";
   };
@@ -594,7 +595,7 @@ useEffect(()=>{try{localStorage.setItem("shb_presets",JSON.stringify(presets));}
     if(f.hang_muc_chuan.length>0&&!f.hang_muc_chuan.includes(d.hang_muc_chuan))return false;
     if(f.work_type.length>0&&!f.work_type.includes(d.work_type))return false;
     return true;
-  }),[f,dateRange,cfg.statusGroups,liveData]);
+  }),[f,dateRange,dateField,cfg.statusGroups,liveData]);
   const dataWithGrp=data.map(d=>({...d,_grp:getGrp(d.status)}));
 
   const total=data.length;
@@ -855,7 +856,12 @@ useEffect(()=>{try{localStorage.setItem("shb_presets",JSON.stringify(presets));}
 </div>
 <div style={{position:"relative",marginBottom:14}} ref={pickerRef}>
           <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}><button onClick={()=>setShowPicker(o=>!o)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",background:showPicker?`${C.accent}18`:"rgba(255,255,255,0.04)",border:showPicker?`1px solid ${C.accent}50`:"1px solid rgba(255,255,255,0.08)",borderRadius:10,cursor:"pointer",transition:"all .15s"}}><span style={{fontSize:14}}>&#128197;</span><div style={{textAlign:"left"}}><div style={{fontSize:12,fontWeight:600,color:"#E8EAF0"}}>{fmtD(startDate)} – {fmtD(endDate)}</div><div style={{fontSize:9,color:"#4B5EA6",marginTop:1}}>{days} ngày · So với: {prevLabel}</div></div><span style={{fontSize:11,color:"#4B5EA6"}}>▾</span></button><div style={{display:"flex",alignItems:"center",gap:6,padding:"5px 11px",background:"rgba(123,158,255,0.06)",border:"1px solid rgba(123,158,255,0.1)",borderRadius:8}}><span style={{fontSize:10,color:"#4B5EA6"}}>Đơn vị trục X:</span><span style={{fontSize:11,fontWeight:700,color:C.squad}}>{unitLbl}</span></div></div>
-          {showPicker&&<DatePicker start={dateRange.start} end={dateRange.end} onApply={(s,e)=>{setDateRange({start:s,end:e});setShowPicker(false);setPage(1);}} onClose={()=>setShowPicker(false)} accent={C.accent}/>}
+          <select value={dateField} onChange={e=>{setDateField(e.target.value);setPage(1);}} style={{padding:"5px 8px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:7,color:"#8899BB",fontSize:11,cursor:"pointer",outline:"none"}}>
+  <option value="updated">Cập nhật</option>
+  <option value="created">Ngày tạo</option>
+  <option value="due">Deadline</option>
+</select>
+{showPicker&&<DatePicker start={dateRange.start} end={dateRange.end} onApply={(s,e)=>{setDateRange({start:s,end:e});setShowPicker(false);setPage(1);}} onClose={()=>setShowPicker(false)} accent={C.accent}/>}
           {showPicker&&<div style={{display:"flex",gap:5,marginTop:6,flexWrap:"wrap"}}>{[["7N",7],["30N",30],["90N",90],["Tháng này",-1],["Quý này",-2]].map(([label,d])=>{const today=new Date();let s,e=today.toISOString().slice(0,10);if(d===-1){s=new Date(today.getFullYear(),today.getMonth(),1).toISOString().slice(0,10);}else if(d===-2){const q=Math.floor(today.getMonth()/3);s=new Date(today.getFullYear(),q*3,1).toISOString().slice(0,10);}else{const sd=new Date(today);sd.setDate(sd.getDate()-d+1);s=sd.toISOString().slice(0,10);}return(<button key={label} onClick={()=>{setDateRange({start:s,end:e});setShowPicker(false);setPage(1);}} style={{padding:"4px 9px",background:"rgba(123,158,255,0.1)",border:"1px solid rgba(123,158,255,0.2)",borderRadius:6,color:"#7B9EFF",fontSize:10,cursor:"pointer",fontWeight:600}}>{label}</button>);})}</div>}
         </div>
         {selectedTaskKeys.length>0&&<div style={{padding:"8px 14px",marginBottom:8,background:"linear-gradient(90deg,rgba(244,121,32,0.12),rgba(244,121,32,0.04))",border:"1px solid rgba(244,121,32,0.25)",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"space-between"}}><div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:14}}>&#128203;</span><span style={{fontSize:11,color:C.accent,fontWeight:600}}>Đang lọc chéo {selectedTaskKeys.length} task được chọn — toàn bộ chart & thẻ phản ánh data này</span></div><button onClick={()=>setSelectedTaskKeys([])} style={{padding:"4px 12px",background:"rgba(244,121,32,0.2)",border:"1px solid rgba(244,121,32,0.35)",borderRadius:6,color:C.accent,fontSize:10,cursor:"pointer",fontWeight:600,whiteSpace:"nowrap"}}>✕ Bỏ chọn tất cả</button></div>}
