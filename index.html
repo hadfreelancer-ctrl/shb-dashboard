@@ -70,13 +70,26 @@ const SHEET_TAB = "DATA_ALL";
 
 function parseGvizDate(val) {
   if(!val) return "";
-  const s = String(val);
+  const s = String(val).trim();
   // gviz format: Date(2026,4,13,9,15,0) — month is 0-indexed
   const m = s.match(/Date\((\d+),(\d+),(\d+)(?:,(\d+),(\d+),(\d+))?\)/);
   if(m) {
     const y=m[1], mo=String(+m[2]+1).padStart(2,"0"), d=String(m[3]).padStart(2,"0");
     const h=m[4]?String(m[4]).padStart(2,"0"):"00", mn=m[5]?String(m[5]).padStart(2,"0"):"00";
     return `${y}-${mo}-${d}T${h}:${mn}`;
+  }
+  // dd/mm/yyyy hoặc dd/mm/yy (format Google Sheets Việt Nam)
+  const dmy = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if(dmy) {
+    const d=String(dmy[1]).padStart(2,"0"), mo=String(dmy[2]).padStart(2,"0");
+    const y=dmy[3].length===2?"20"+dmy[3]:dmy[3];
+    return `${y}-${mo}-${d}`;
+  }
+  // yyyy-mm-dd (ISO) hoặc yyyy/mm/dd
+  const iso = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+  if(iso) {
+    const y=iso[1], mo=String(iso[2]).padStart(2,"0"), d=String(iso[3]).padStart(2,"0");
+    return `${y}-${mo}-${d}`;
   }
   return s;
 }
